@@ -19,7 +19,9 @@ rather than inventing labels.
 
 **Any request that will change the repository gets a tracker item AND an entry in the
 project's work document FIRST** — not afterwards, not "if it turns out to be big". File it,
-tell the user the item number, then work.
+tell the user the item number, then work. A project may declare in its agent file that the
+tracker **is** its work document — sensible for a small or tooling repository; one item
+with the reasoning in its body then satisfies both writes.
 
 **The only exceptions** — name which one applies rather than assuming:
 
@@ -56,7 +58,8 @@ cannot act on it without re-deriving the analysis:
 
 Then write the *reasoning* into the project's work document. The tracker item holds the
 task; the document holds why it exists — because an item disappears when it closes, and the
-reason has to outlive it.
+reason has to outlive it. (Where the tracker is the work document, the body carries the
+reasoning — written to be read after the item closes.)
 
 ### Priority
 
