@@ -80,10 +80,19 @@ disappeared upstream are reported, not deleted, so removing something is a delib
 ### CI
 
 ```yaml
+name: dev-standards
+on:
+  push: { branches: [main] }
+  pull_request:
 jobs:
   standards:
     uses: entercloud-cz/dev-standards/.github/workflows/dev-standards-check.yml@main
 ```
+
+Name the caller file `dev-standards.yml` (what `init` writes) so the check's origin is
+readable in the repo and in PR checks; the reusable job itself displays as
+`dev-standards check` whatever the caller is named. An existing consumer renames its own
+caller file — that file is the project's, not vendored, so `update` will not do it.
 
 The check is local and needs no network beyond fetching the CLI. It fails when a vendored
 file differs from the pinned version — the failure worth catching, because a shared skill

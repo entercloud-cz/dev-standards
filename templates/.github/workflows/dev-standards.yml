@@ -1,7 +1,7 @@
 # Fails when a vendored dev-standards file was edited locally — that edit would be
 # overwritten by the next update and never reach the other repos. A yellow annotation
 # (build stays green) means a newer dev-standards release exists.
-name: standards
+name: dev-standards
 
 on:
   push:

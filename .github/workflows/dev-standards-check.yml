@@ -21,6 +21,9 @@ on:
 
 jobs:
   check:
+    # The display name every consumer sees in its PR checks — it must say where the
+    # gate comes from, whatever the consumer named its caller workflow.
+    name: dev-standards check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
