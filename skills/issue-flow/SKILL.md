@@ -54,9 +54,9 @@ cannot act on it without re-deriving the analysis:
 - **Likely files, with their owning lane** — this is what tells the other lane whether the
   work touches them.
 
-Then write the *reasoning* into the project's work document and refresh any generated
-index. The tracker item holds the task; the document holds why it exists — because an item
-disappears when it closes, and the reason has to outlive it.
+Then write the *reasoning* into the project's work document. The tracker item holds the
+task; the document holds why it exists — because an item disappears when it closes, and the
+reason has to outlive it.
 
 ### Priority
 
@@ -77,7 +77,7 @@ half.
 
 ## Finishing work
 
-Do all four, in this order. Skipping the last two is how documents start lying.
+Do all three, in this order. Skipping the last two is how documents start lying.
 
 1. **Close the item with evidence.** What changed, and how you know it works — a test name,
    a count, a live check. A comment that says only "done" is worthless in six months. If
@@ -86,8 +86,15 @@ Do all four, in this order. Skipping the last two is how documents start lying.
 2. **Update the document the change belongs to** — see the `docs-flow` skill for which one.
 3. **Reflect the new state in the work document** — marked done with its reason, not just a
    tick.
-4. **Regenerate any mirror** (an index, a status table) — and do it **after** the item is
-   closed, or it captures the pre-close state.
+
+**Do not mirror live tracker state into a versioned document.** Which items are open is
+already true somewhere else; a copy in the repository can only be refreshed *after* the item
+closes, which is after the change that closed it merged — so every finished piece of work
+would owe the repository a second commit containing nothing but a generated file, and until
+that commit the document is wrong. Point at the tracker (a query, a command) instead, and
+generate the live view where it is read rather than storing it. What a document *may*
+generate is what the repository itself owns — the reserve below is derived from the manifest,
+so it is deterministic and CI can gate it.
 
 ## Handing over an item that spans lanes
 
