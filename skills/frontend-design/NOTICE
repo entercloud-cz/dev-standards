@@ -1,0 +1,12 @@
+frontend-design skill
+
+Vendored verbatim from https://github.com/anthropics/skills
+  path:    skills/frontend-design/
+  commit:  b29e7cf65e5cb78a5ac33d582270551bc74a14eb
+  fetched: 2026-08-06
+  license: Apache License 2.0 (see LICENSE.txt)
+  copyright: Anthropic, PBC
+
+Do not edit this copy locally — it is kept byte-identical to upstream so it can
+be re-synced. To change behaviour for this org, propose the change upstream or
+raise an issue in entercloud-cz/dev-standards to fork it deliberately.
