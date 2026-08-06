@@ -1,0 +1,43 @@
+name: Task
+description: Work that will change the repository
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Everything below exists so the next person can act without re-deriving your
+        analysis. See the `issue-flow` skill for the discipline.
+  - type: textarea
+    id: why
+    attributes:
+      label: Why it matters
+      description: One or two sentences of impact — what breaks, which number is wrong, what a user cannot do. Not "improve X".
+    validations: { required: true }
+  - type: textarea
+    id: done
+    attributes:
+      label: Done when
+      description: Verifiable criteria, one per line, including how it will be verified.
+      placeholder: |
+        - [ ] …
+        - [ ] a test / a count / a live check covers it
+    validations: { required: true }
+  - type: input
+    id: files
+    attributes:
+      label: Likely files (and their owning lane)
+      description: What tells the other lane whether this touches them.
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - "P0 — correctness or security: wrong money, wrong data, a hole"
+        - "P1 — user-visible breakage or a scale blocker"
+        - "P2 — debt / cosmetic / waiting on a measured trigger"
+    validations: { required: true }
+  - type: input
+    id: source
+    attributes:
+      label: Source
+      description: Where this came from — a work-document section, a request with its date, or "found while working on #n".

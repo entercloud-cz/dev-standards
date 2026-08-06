@@ -1,0 +1,28 @@
+# Reusable drift check — call it from a consumer repo:
+#
+#   jobs:
+#     standards:
+#       uses: entercloud-cz/dev-standards/.github/workflows/dev-standards-check.yml@main
+#
+# It fails when a vendored file no longer matches the version the project pinned, which is
+# the failure that would otherwise be invisible: a shared skill edited in one consumer,
+# overwritten by the next update, never reaching the other repos.
+name: dev-standards drift check
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        type: string
+        default: '20'
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+      - name: Vendored standards match the pinned version
+        run: npx --yes github:entercloud-cz/dev-standards check
