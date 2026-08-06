@@ -114,8 +114,9 @@ a document — prose is how low-priority work disappears, because nobody re-read
 sections to enumerate it.
 
 Promote an entry when it becomes real: create the item, **then write its acceptance
-criteria** (a reserve entry has none), and move it out of the reserve so it survives the
-tooling being re-run.
+criteria** (a reserve entry has none). The moment something is a tracker item it **leaves
+the reserve** — the tracker owns it now, and an entry recorded in both places is counted
+twice. Where the project uses the shared seeding tool, the removal happens by itself.
 
 Something new that is only low-priority goes into the reserve, not into a document's prose.
 

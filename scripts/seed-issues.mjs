@@ -3,9 +3,11 @@
  * Seed GitHub labels, milestones and issues from the project's issue manifest.
  *
  * IDEMPOTENT BY DESIGN: it reads what already exists and creates only what is
- * missing (issues are matched on the exact title). Re-running is therefore safe
- * and is how you promote a low-priority item out of the reserve later — add a row to the
- * manifest and run this again.
+ * missing (issues are matched on the exact title) — and the manifest is a QUEUE, not a
+ * registry: once the tracker owns an item, its entry is removed from the manifest in
+ * the same run. What remains in the file is only what the repository still owns — the
+ * reserve, and anything not yet seeded. An entry kept after creation would only go
+ * stale (its `done`/`why` stop matching the item) and be counted twice.
  *
  * Lanes: every issue carries a `track/<lane>` label, so `gh issue list --assignee @me`
  * is a person's queue and `-l track/<lane>` is a whole lane. The lane names, their
@@ -20,7 +22,7 @@
  */
 
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 // Project specifics come from .dev-standards.json — see lib/config.mjs. This script
@@ -66,13 +68,15 @@ ${done}
 <sub>Seeded from \`${CFG.manifest}\` (slug: \`${i.slug}\`). Branch: \`${i.track === 'both' ? Object.keys(CFG.owners).join('|') || 'lane' : i.track}/${i.slug}\`. The reasoning behind this item lives in ${i.source.split(' ')[0]}.</sub>`;
 }
 
+// A reserve entry has no priority (issue-flow: it gets one when promoted), so filter
+// the gaps out — `undefined` must never reach `gh` as a label name.
 const labelsFor = (i) => [
   `track/${i.track}`,
   i.priority,
   `size/${i.size}`,
   ...(i.areas || []).map((a) => `area/${a}`),
   ...(i.needs ? [`needs/${i.needs}`] : []),
-];
+].filter(Boolean);
 
 // Every issue gets an owner at creation where the project names one: an unassigned issue
 // means "what am I working on" has no answer GitHub can give. A cross-lane item goes to
@@ -105,7 +109,7 @@ if (ONLY.length && issues.length !== ONLY.length) {
 for (const i of issues) {
   if (reserve.includes(i)) {
     console.log(`Note: '${i.slug}' comes from the reserve — it has no acceptance criteria yet.`);
-    console.log('      Write "Done when" into the issue after creating it, and move the entry into `issues`.');
+    console.log('      Write "Done when" into the issue after it is created; its entry leaves the manifest by itself.');
   }
 }
 
@@ -145,10 +149,11 @@ const existingIssues = new Map(
     .map((i) => [i.title, i.number])
 );
 let createdIssues = 0, skipped = 0;
+const createdTitles = new Set();
 for (const i of issues) {
   if (existingIssues.has(i.title)) { skipped++; continue; }
   const labels = labelsFor(i);
-  step('create issue', `[${i.track}/${i.priority}] ${i.title}`);
+  step('create issue', `[${i.track}/${i.priority || 'no priority yet'}] ${i.title}`);
   if (!DRY) {
     const a = ['issue', 'create', '-R', REPO, '--title', i.title, '--body', renderBody(i)];
     for (const l of labels) a.push('--label', l);
@@ -156,12 +161,32 @@ for (const i of issues) {
     const owner = assigneeFor(i);
     if (owner) a.push('--assignee', owner);
     const url = gh(a);
+    createdTitles.add(i.title);
     console.log(`   → ${url}${owner ? `  (@${owner})` : ''}`);
   } else {
     console.log(`   labels: ${labels.join(', ')}${i.milestone ? ` · milestone: ${i.milestone}` : ''}`
       + `${assigneeFor(i) ? ` · @${assigneeFor(i)}` : ''}`);
   }
   createdIssues++;
+}
+
+// The manifest is a queue: an entry whose title the tracker now owns is dead weight —
+// remove it (uniformly from `issues` and `reserve`) so the file holds only what the
+// repository still owns. This is also what makes the reserve authoritative for
+// sync-backlog-index without any live lookup.
+const owned = new Set([...existingIssues.keys(), ...createdTitles]);
+const keep = (list) => list.filter((i) => !owned.has(i.title));
+const nextIssues = keep(manifest.issues || []);
+const nextReserve = keep(reserve);
+const removedEntries = ((manifest.issues || []).length - nextIssues.length) + (reserve.length - nextReserve.length);
+if (removedEntries) {
+  const noun = `entr${removedEntries === 1 ? 'y' : 'ies'}`;
+  if (DRY) {
+    console.log(`\n[dry-run] would remove ${removedEntries} manifest ${noun} now owned by the tracker.`);
+  } else {
+    writeFileSync(MANIFEST, JSON.stringify({ ...manifest, issues: nextIssues, reserve: nextReserve }, null, 2) + '\n');
+    console.log(`\nManifest: removed ${removedEntries} ${noun} now owned by the tracker.`);
+  }
 }
 
 console.log(`\nLabels created: ${createdLabels} (${manifestLabels.length - createdLabels} already present)`);

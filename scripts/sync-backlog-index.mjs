@@ -48,14 +48,10 @@ let manifest = { issues: [], reserve: [] };
 try {
   manifest = JSON.parse(readFileSync(join(ROOT, CFG.manifest), 'utf8'));
 } catch (_) { /* manifest optional: the block is then empty */ }
-const reserve = manifest.reserve || [];
-const filedTitles = new Set((manifest.issues || []).map((i) => i.title));
-
-// A promoted item is moved from `reserve` into `issues` (the issue-flow skill says so),
-// so the manifest alone decides what is still in reserve. Matching on the manifest and
-// not on live titles is what makes this block deterministic — and an entry left in both
-// places shows up in BOTH lists, which is the drift `--emit` warns about below.
-const pending = reserve.filter((r) => !filedTitles.has(r.title));
+// The manifest is a queue: seed-issues removes an entry the moment the tracker owns it,
+// so `reserve` is authoritative as-is — no live lookup, which is what keeps this block
+// deterministic and offline.
+const pending = manifest.reserve || [];
 
 // ── The deterministic block ──────────────────────────────────────────────────
 const lanesOf = (items) => [...new Set([...configuredLanes, ...items.map((i) => i.track)])];
@@ -63,8 +59,8 @@ const lanesOf = (items) => [...new Set([...configuredLanes, ...items.map((i) => 
 const reserveLines = [];
 if (pending.length) {
   reserveLines.push(`#### Reserve — ${pending.length} low-priority items, not tracker items yet`, '');
-  reserveLines.push('_Promote one with `node scripts/seed-issues.mjs --only=<slug>`, then write its'
-    + ` acceptance criteria into the item and move the entry into \`issues\`. Detail: \`${CFG.manifest}\`._`, '');
+  reserveLines.push('_Promote one with `node scripts/seed-issues.mjs --only=<slug>` — it files the item'
+    + ` and removes the entry; then write acceptance criteria into the item. Detail: \`${CFG.manifest}\`._`, '');
   for (const track of lanesOf(pending)) {
     const mine = pending.filter((r) => r.track === track);
     if (!mine.length) continue;
@@ -92,8 +88,8 @@ if (EMIT) {
     '--json', 'number,title,state,labels',
   ], { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 }));
 
-  const slugByTitle = new Map((manifest.issues || []).map((i) => [i.title, i.slug]));
   const labelNames = (i) => i.labels.map((l) => l.name);
+  const short = (t) => (t.length > 48 ? `${t.slice(0, 47)}…` : t);
   const trackOf = (i) => (labelNames(i).find((n) => n.startsWith('track/')) || '').split('/')[1] || 'untracked';
   // Priority labels are project vocabulary (issueFlow.labels.priorities, most-urgent
   // first) — hard-coding a P0/P1/P2 scheme here would silently mis-sort any project
@@ -114,8 +110,7 @@ if (EMIT) {
       done ? closed++ : open++;
       // A closed item stays listed, struck through: the view doubles as the record of
       // what this backlog has actually shipped.
-      const slug = slugByTitle.get(i.title);
-      const label = `#${i.number} ${prioOf(i)}${slug ? ' ' + slug : ''}`;
+      const label = `#${i.number} ${prioOf(i)} ${short(i.title)}`;
       return done ? `~~${label}~~` : label;
     });
     const openCount = mine.filter((i) => i.state !== 'CLOSED').length;
@@ -125,19 +120,6 @@ if (EMIT) {
   console.log('');
   console.log(out.join('\n'));
   console.log(reserveLines.join('\n'));
-
-  // The one thing only the live view can see: an entry that was promoted but never
-  // moved out of `reserve`, so it is counted twice.
-  const liveTitles = new Set(issues.map((i) => i.title));
-  const stale = pending.filter((r) => liveTitles.has(r.title));
-  if (stale.length) {
-    const one = stale.length === 1;
-    console.error(`\nWARNING: ${stale.length} reserve entr${one ? 'y is' : 'ies are'} already`
-      + ` ${one ? 'a tracker item' : 'tracker items'} — move ${one ? 'it' : 'them'} from`
-      + ` \`reserve\` into \`issues\` in ${CFG.manifest}:`);
-    for (const r of stale) console.error(`  - ${r.slug}`);
-    process.exit(1);
-  }
   process.exit(0);
 }
 
