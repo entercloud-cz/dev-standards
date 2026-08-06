@@ -16,8 +16,7 @@
 
 import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 
 // Project specifics come from .dev-standards.json — see lib/config.mjs.
 import { issueFlowConfig } from './lib/config.mjs';

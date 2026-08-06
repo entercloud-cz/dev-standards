@@ -21,8 +21,7 @@
 
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 
 // Project specifics come from .dev-standards.json — see lib/config.mjs. This script
 // carries no repo slug, path or username, so it works in any repo that has that file.
@@ -88,12 +87,16 @@ const assigneeFor = (i) => {
 
 // ── Main ─────────────────────────────────────────────────────────────────────
 const manifest = JSON.parse(readFileSync(MANIFEST, 'utf8'));
+// Every section is optional — a manifest that only seeds issues should not crash on
+// the sections it does not have.
+const manifestLabels = manifest.labels || [];
+const manifestMilestones = manifest.milestones || [];
 const reserve = manifest.reserve || [];
 // A default run seeds only `issues`. `--only` ALSO reaches into the reserve, so promoting
 // a low-priority item is one command — that reserve is the whole point of keeping
 // low-priority work as structured data instead of prose nobody re-reads.
-const pool = [...manifest.issues, ...reserve];
-const issues = ONLY.length ? pool.filter((i) => ONLY.includes(i.slug)) : manifest.issues;
+const pool = [...(manifest.issues || []), ...reserve];
+const issues = ONLY.length ? pool.filter((i) => ONLY.includes(i.slug)) : (manifest.issues || []);
 if (ONLY.length && issues.length !== ONLY.length) {
   const missing = ONLY.filter((s) => !pool.some((i) => i.slug === s));
   console.error(`Unknown slug(s): ${missing.join(', ')}`);
@@ -111,7 +114,7 @@ console.log(`Repo: ${REPO}${DRY ? '  (DRY RUN — nothing will be created)' : ''
 // 1) Labels
 const existingLabels = new Set(gh(['label', 'list', '-R', REPO, '--limit', '200', '--json', 'name'], { json: true }).map((l) => l.name));
 let createdLabels = 0;
-for (const l of manifest.labels) {
+for (const l of manifestLabels) {
   if (existingLabels.has(l.name)) continue;
   step('create label', l.name);
   if (!DRY) gh(['label', 'create', l.name, '-R', REPO, '--color', l.color, '--description', l.description]);
@@ -123,7 +126,7 @@ const existingMilestones = new Map(
   gh(['api', `repos/${REPO}/milestones?state=all&per_page=100`], { json: true }).map((m) => [m.title, m.number])
 );
 let createdMilestones = 0;
-for (const m of manifest.milestones) {
+for (const m of manifestMilestones) {
   if (existingMilestones.has(m.title)) continue;
   step('create milestone', m.title);
   if (!DRY) {
@@ -161,7 +164,7 @@ for (const i of issues) {
   createdIssues++;
 }
 
-console.log(`\nLabels created: ${createdLabels} (${manifest.labels.length - createdLabels} already present)`);
-console.log(`Milestones created: ${createdMilestones} (${manifest.milestones.length - createdMilestones} already present)`);
+console.log(`\nLabels created: ${createdLabels} (${manifestLabels.length - createdLabels} already present)`);
+console.log(`Milestones created: ${createdMilestones} (${manifestMilestones.length - createdMilestones} already present)`);
 console.log(`Issues created: ${createdIssues}, already present: ${skipped}, total in manifest: ${issues.length}`);
 if (DRY) console.log('\nDry run — nothing was created. Re-run without --dry-run to apply.');

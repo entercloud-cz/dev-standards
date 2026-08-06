@@ -77,12 +77,13 @@ function vendor(cmd) {
   for (const { src, dest } of payloadFiles()) {
     const buf = readFileSync(src);
     const target = join(PROJECT, dest);
-    const same = existsSync(target) && readFileSync(target).equals(buf);
+    const existed = existsSync(target);
+    const same = existed && readFileSync(target).equals(buf);
     if (!same) {
       mkdirSync(dirname(target), { recursive: true });
       writeFileSync(target, buf);
       written++;
-      console.log(`  ${existsSync(target) && previous ? 'updated' : 'added  '} ${dest}`);
+      console.log(`  ${existed ? 'updated' : 'added  '} ${dest}`);
     } else {
       unchanged++;
     }
@@ -111,6 +112,7 @@ function vendor(cmd) {
       workDocument: 'docs/BACKLOG.md',
       owners: {},
       defaultFirstLane: null,
+      labels: {},
     },
   }, null, 2) + '\n');
 
