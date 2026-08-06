@@ -48,4 +48,7 @@ see `docs-flow` → "Earning a place in the always-in-context file"._
 ## Working agreement
 
 - Verify locally before claiming done; close items with evidence (`issue-flow`).
+- _TODO once a build/test loop exists: list the exact commands here (build, test, lint,
+  run) — the most valuable lines this file can carry; without them an agent spends steps
+  rediscovering the loop every session._
 - Commit and push only when asked.
