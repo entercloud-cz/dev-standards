@@ -9,6 +9,7 @@ for the parts of our working agreement that are not specific to any one product:
 | `docs-flow` skill — which document holds what, and how to write into it | `skills/docs-flow/` | `.claude/skills/docs-flow/` |
 | `app-design` skill — the order of design artifacts for a new web application, and the discipline that keeps a design honest | `skills/app-design/` | `.claude/skills/app-design/` |
 | `frontend-design` skill — graphic design of UIs; vendored verbatim from [anthropics/skills](https://github.com/anthropics/skills) (Apache 2.0, see its `NOTICE`) | `skills/frontend-design/` | `.claude/skills/frontend-design/` |
+| `azure-deploy` skill — Azure architecture and deployment discipline: Bicep layering, the two-pipeline ownership split, secret flows, GitHub Actions shape | `skills/azure-deploy/` | `.claude/skills/azure-deploy/` |
 | Issue-flow tooling — manifest-driven issue seeding + a generated work-document index | `scripts/` | `scripts/` |
 | Reusable drift-check workflow | `.github/workflows/dev-standards-check.yml` | `uses:` from a consumer workflow |
 
