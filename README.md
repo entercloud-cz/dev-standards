@@ -14,6 +14,7 @@ for the parts of our working agreement that are not specific to any one product:
 | `db-migration` skill — schema-change discipline: guarded idempotent migrations, expand/contract, isolation seams | `skills/db-migration/` | `.claude/skills/db-migration/` |
 | Issue-flow tooling — manifest-driven issue seeding + the deterministic reserve block, and `--emit` for the live tracker view | `scripts/` | `scripts/` |
 | Reusable drift-check workflow | `.github/workflows/dev-standards-check.yml` | `uses:` from a consumer workflow |
+| Reusable backlog workflow — offline reserve gate + live lane view in the run summary | `.github/workflows/dev-standards-backlog.yml` | `uses:` from a consumer workflow (starter caller written by `init`) |
 
 Issue and PR templates are **not** here — GitHub distributes those itself from
 [`entercloud-cz/.github`](https://github.com/entercloud-cz/.github), so that repo is the only

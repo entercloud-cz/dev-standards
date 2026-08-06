@@ -1,0 +1,52 @@
+# Reusable backlog workflow — the consumer half of the no-mirror decision, callable as:
+#
+#   jobs:
+#     backlog:
+#       uses: entercloud-cz/dev-standards/.github/workflows/dev-standards-backlog.yml@main
+#
+# Two halves, matching what the vendored sync-backlog-index.mjs provides:
+#   * reserve block — deterministic and OFFLINE: fails when the issue manifest changed
+#     and the reserve block in the work document was not regenerated;
+#   * live view — the lane view rendered into the run summary, never committed (a stored
+#     mirror of live tracker state would be wrong the moment an item closed).
+#
+# The split of ownership: this file owns the JOB BODIES, so they track the vendored
+# tooling; the consumer's caller owns the TRIGGERS, because which paths matter depends on
+# its .dev-standards.json (manifest and work-document locations). The caller needs
+# `contents: read` and `issues: read`.
+name: dev-standards backlog
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        type: string
+        default: '22'
+
+jobs:
+  reserve-block:
+    # Issue events cannot change the two files this job reads, so they skip it — but a
+    # manual dispatch must NOT, or the check is unreachable whenever webhooks throttle.
+    name: dev-standards reserve block
+    if: github.event_name != 'issues'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+      - name: Verify the reserve block matches the manifest
+        run: node scripts/sync-backlog-index.mjs --check
+
+  publish-live-view:
+    name: dev-standards live view
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+      - name: Render the lane view into the run summary
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/sync-backlog-index.mjs --emit >> "$GITHUB_STEP_SUMMARY"

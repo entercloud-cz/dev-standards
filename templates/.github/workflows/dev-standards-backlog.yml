@@ -1,0 +1,34 @@
+# The work document's index, in two halves (see the issue-flow skill): the reserve block
+# is verified offline whenever the files it derives from change; the live lane view is
+# published to the run summary, never committed. The job bodies live in dev-standards —
+# only these triggers are this project's, so ADJUST THE PATHS if .dev-standards.json
+# moves the manifest or the work document.
+name: dev-standards backlog
+
+on:
+  pull_request:
+    paths:
+      - 'docs/issues-seed.json'
+      - 'docs/BACKLOG.md'
+      - 'scripts/sync-backlog-index.mjs'
+      - '.dev-standards.json'
+  push:
+    branches: [main]
+  # Issue events keep the published view fresh without anyone pushing.
+  issues:
+    types: [opened, closed, reopened, labeled, unlabeled, assigned, unassigned]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: read
+
+# A burst of issue events would render the same view several times; unlike a deployment,
+# a superseded render is worthless — cancel it.
+concurrency:
+  group: dev-standards-backlog-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backlog:
+    uses: entercloud-cz/dev-standards/.github/workflows/dev-standards-backlog.yml@main
