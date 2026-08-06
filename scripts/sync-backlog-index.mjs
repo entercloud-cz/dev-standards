@@ -49,9 +49,12 @@ const liveTitles = new Set();
 
 const labelNames = (i) => i.labels.map((l) => l.name);
 const trackOf = (i) => (labelNames(i).find((n) => n.startsWith('track/')) || '').split('/')[1] || 'untracked';
-const prioOf = (i) => labelNames(i).find((n) => /^P[012]$/.test(n)) || 'P?';
-
-const PRIO_ORDER = { P0: 0, P1: 1, P2: 2, 'P?': 3 };
+// Priority labels are project vocabulary (issueFlow.labels.priorities, most-urgent
+// first) — hard-coding a P0/P1/P2 scheme here would silently mis-sort any project
+// that names its priorities differently. Unknown labels sort last, shown as '?'.
+const PRIORITIES = CFG.labels.priorities;
+const prioOf = (i) => labelNames(i).find((n) => PRIORITIES.includes(n)) || '?';
+const prioRank = (p) => (PRIORITIES.includes(p) ? PRIORITIES.indexOf(p) : PRIORITIES.length);
 const lines = [];
 let open = 0, closed = 0;
 
@@ -63,7 +66,7 @@ const lanes = [...new Set([...laneOrder, ...issues.map(trackOf)])];
 for (const track of lanes) {
   const mine = issues.filter((i) => trackOf(i) === track);
   if (!mine.length) continue;
-  mine.sort((a, b) => (PRIO_ORDER[prioOf(a)] - PRIO_ORDER[prioOf(b)]) || (a.number - b.number));
+  mine.sort((a, b) => (prioRank(prioOf(a)) - prioRank(prioOf(b))) || (a.number - b.number));
   const cells = mine.map((i) => {
     liveTitles.add(i.title);
     const done = i.state === 'CLOSED';

@@ -33,8 +33,11 @@ npx github:entercloud-cz/dev-standards install
 That copies the skills and scripts into the project and writes `.dev-standards.json`
 recording the source, the version and a hash per file. Then:
 
-1. Fill in the `issueFlow` block of `.dev-standards.json` — at minimum `repo`, and `owners`
-   if the project has lanes.
+1. Fill in the `issueFlow` block of `.dev-standards.json` — at minimum `repo`, `owners`
+   if the project has lanes, and `labels.priorities` (ordered, most-urgent first) if the
+   project's priority labels are not the conventional `P0`/`P1`/`P2`. The `track/`,
+   `size/`, `area/` and `needs/` label **prefixes** are the org-wide grammar the tooling
+   relies on; the names behind them are the project's own.
 2. Add the drift check to CI (below).
 3. Tell the agent file that these files are **vendored**: do not edit them here, send the
    change upstream.

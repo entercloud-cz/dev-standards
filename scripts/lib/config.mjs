@@ -31,7 +31,10 @@ export function issueFlowConfig(root = process.cwd()) {
     owners: cfg.owners || {},
     // For cross-lane items: which lane goes first when the item does not say.
     defaultFirstLane: cfg.defaultFirstLane || null,
-    labels: cfg.labels || {},
+    // Label vocabulary the scripts must recognise. `priorities` is ordered most-urgent
+    // first; P0/P1/P2 is a conventional default, and a project that names its priority
+    // labels differently overrides it here — the scripts never assume the P scheme.
+    labels: { priorities: ['P0', 'P1', 'P2'], ...(cfg.labels || {}) },
   };
   if (!out.repo) {
     throw new Error(`issueFlow.repo is required in ${CONFIG_FILE} (e.g. "org/repo")`);
