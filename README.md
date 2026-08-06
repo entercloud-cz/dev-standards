@@ -8,8 +8,12 @@ for the parts of our working agreement that are not specific to any one product:
 | `issue-flow` skill — every request is filed before it is worked, closed with evidence | `skills/issue-flow/` | `.claude/skills/issue-flow/` |
 | `docs-flow` skill — which document holds what, and how to write into it | `skills/docs-flow/` | `.claude/skills/docs-flow/` |
 | Issue-flow tooling — manifest-driven issue seeding + a generated work-document index | `scripts/` | `scripts/` |
-| Issue / PR templates | `templates/.github/` | copy into the consumer, or into the org `.github` repo |
 | Reusable drift-check workflow | `.github/workflows/dev-standards-check.yml` | `uses:` from a consumer workflow |
+
+Issue and PR templates are **not** here — GitHub distributes those itself from
+[`entercloud-cz/.github`](https://github.com/entercloud-cz/.github), so that repo is the only
+place they can be true. Keeping a copy here as well would be the duplication the `docs-flow`
+skill exists to prevent.
 
 Nothing here names a repository, a person, a label or a file path of a specific project.
 Each consumer keeps its own vocabulary in **`.dev-standards.json`** (tooling config) and in
