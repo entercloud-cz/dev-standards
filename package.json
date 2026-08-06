@@ -1,6 +1,6 @@
 {
   "name": "@entercloud/dev-standards",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Shared engineering standards for entercloud-cz: project-agnostic Claude Code skills and issue-flow tooling.",
   "bin": {
     "dev-standards": "bin/dev-standards.mjs"
