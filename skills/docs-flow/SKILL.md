@@ -91,9 +91,9 @@ precisely, and **replace** it instead of stacking both.
    run, in copy-pasteable form.
 3. The work document reflects the new state (item marked done with its reason, or a new
    item filed).
-4. Any **generated** section (an index, a table of contents, a status mirror) is
-   regenerated — and if it mirrors an issue tracker, regenerate it **after** the issue is
-   closed, not before, or it captures the pre-close state.
+4. Any **generated** section (an index, a table of contents) is regenerated — and it
+   generates only what the repository itself owns. Live tracker state is pointed at,
+   never mirrored into a versioned document (the `issue-flow` skill says why).
 5. No document contradicts another.
 
 ## Do not create new documents
