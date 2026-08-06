@@ -69,6 +69,11 @@ file differs from the pinned version — the failure worth catching, because a s
 edited inside one consumer gets overwritten by the next `update` and never reaches the
 other repos.
 
+When a **newer release** exists than the one the project pins, the run stays green but
+shows a yellow annotation and a job-summary note with the update command. Green-but-noted
+is deliberate: updates are reviewed, never automatic (CLAUDE.md → *Decisions already
+taken*) — the note only removes the excuse of not knowing.
+
 ## Changing a shared skill or script
 
 1. Change it **here**, on a branch, with the reasoning in the commit.

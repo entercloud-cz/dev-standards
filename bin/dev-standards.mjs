@@ -17,7 +17,7 @@
  */
 
 import { createHash } from 'node:crypto';
-import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, statSync } from 'node:fs';
+import { appendFileSync, readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -36,6 +36,15 @@ const PAYLOAD = [
 ];
 
 const sha = (buf) => createHash('sha256').update(buf).digest('hex').slice(0, 16);
+
+// Dotted-numeric compare, enough for this repo's x.y.z tags: true when a > b.
+const newerThan = (a, b) => {
+  const [pa, pb] = [a, b].map((v) => String(v).split('.').map(Number));
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    if ((pa[i] || 0) !== (pb[i] || 0)) return (pa[i] || 0) > (pb[i] || 0);
+  }
+  return false;
+};
 
 function walk(dir, base = dir) {
   const out = [];
@@ -153,6 +162,19 @@ function check() {
   if (m.version !== VERSION) {
     console.log(`Note: this CLI is ${VERSION}; the project pins ${m.version}. `
       + `Run \`update\` to move.`);
+    // In CI the unpinned npx fetch makes VERSION the latest release, so a mismatch in
+    // this direction means an update is available. Surface it where someone actually
+    // looks — a yellow annotation and the job summary — while the step stays green:
+    // updating is deliberate (CLAUDE.md → decisions), and `check` itself stays offline.
+    // The reverse direction (a pinned, older CLI checking a newer project) stays quiet.
+    if (newerThan(VERSION, m.version) && process.env.GITHUB_ACTIONS === 'true') {
+      const note = `dev-standards ${VERSION} is available — this project pins ${m.version}. `
+        + `Run: npx github:${SOURCE} update`;
+      console.log(`::warning title=dev-standards update available::${note}`);
+      if (process.env.GITHUB_STEP_SUMMARY) {
+        appendFileSync(process.env.GITHUB_STEP_SUMMARY, `> ⚠️ ${note}\n`);
+      }
+    }
   }
 }
 

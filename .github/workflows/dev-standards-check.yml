@@ -7,6 +7,9 @@
 # It fails when a vendored file no longer matches the version the project pinned, which is
 # the failure that would otherwise be invisible: a shared skill edited in one consumer,
 # overwritten by the next update, never reaching the other repos.
+#
+# When a newer dev-standards release exists than the pin, the run stays green but carries
+# a yellow annotation and a job-summary note — updating is deliberate, not knowing is not.
 name: dev-standards drift check
 
 on:
