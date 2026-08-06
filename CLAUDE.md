@@ -96,6 +96,18 @@ in every consumer — it would trade a stale skill for PR noise nobody reads.
 
 **Templates live in the org `.github` repo.** See the gotcha above.
 
+**A versioned document never mirrors live tracker state** (v1.5.0). `sync-backlog-index.mjs`
+used to write open/closed-per-lane into the work document. That mirror can only be refreshed
+*after* an item closes — i.e. after the change that closed it merged — so every finished
+piece of work owed the consumer a second commit containing nothing but a generated file, and
+until that commit the document was wrong. Now the document holds only what the repository
+owns (the manifest-derived reserve: deterministic, offline, `--check`-able) and `--emit`
+prints the live view to stdout for a CI summary or a terminal.
+*Rejected:* a bot that commits the refreshed index (trades a stale document for bot commits
+on the default branch, and races concurrent merges); a CI check that fails the PR until a
+human commits it (that IS the second commit, only mandatory); keeping the mirror and
+accepting staleness (a mirror exists to be trusted, or not at all).
+
 ## Working in this repo
 
 - **Work is tracked as issues in this repo** (`gh issue list -R entercloud-cz/dev-standards`).
