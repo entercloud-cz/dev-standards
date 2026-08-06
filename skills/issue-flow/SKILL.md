@@ -132,5 +132,10 @@ Something new that is only low-priority goes into the reserve, not into a docume
   open, or split it and link both ways.
 - **Stay in your lane's files.** Needing a file another lane owns means the item spans
   lanes: do your half, mark it, say so.
+- **Verify the instance, not the indicator.** When something fails, a service's status
+  page is a good lead — it suggests what might be wrong — but never the conclusion.
+  Evidence is the run, test or query for *your* change, in both directions: an outage
+  banner does not prove your run did not fire (incidents are partial), and a green
+  status does not prove it did.
 - **Trust the code over the tracker.** When an item's claim and the code disagree, the code
   wins — verify before closing, and fix whichever document was stale.
