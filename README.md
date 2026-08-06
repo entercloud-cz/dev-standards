@@ -18,8 +18,11 @@ skill exists to prevent.
 Nothing here names a repository, a person, a label or a file path of a specific project.
 Each consumer keeps its own vocabulary in **`.dev-standards.json`** (tooling config) and in
 its **agent file** (`CLAUDE.md` / `AGENTS.md` — the ownership map, label meanings, commands).
-That separation is what makes these reusable; it is also the rule to defend when adding
-something here.
+That separation is what makes these reusable.
+
+**Editing this repo?** Read [CLAUDE.md](CLAUDE.md) first — the invariants, the bar for
+adding anything, the decisions already taken and the failure modes the first release
+exposed.
 
 ## Using it in a project
 
@@ -36,11 +39,8 @@ recording the source, the version and a hash per file. Then:
 3. Tell the agent file that these files are **vendored**: do not edit them here, send the
    change upstream.
 
-**Why vendored copies rather than a submodule or a global install:** a clone has to work
-with zero setup. Claude Code discovers skills from files on disk, and any mechanism that
-needs a second command (`git submodule update`, a personal clone) will one day not be run —
-silently, on someone else's machine. Copies are also visible in review, work offline, and
-pin a version per project.
+**Why vendored copies rather than a submodule or a global install**, and what that costs:
+[CLAUDE.md → Decisions already taken](CLAUDE.md#decisions-already-taken).
 
 ## Updating a consumer
 
@@ -78,8 +78,5 @@ should be seen by the person it governs.
 
 ## Adding something to this repo
 
-The bar is one question: **would another product in the org use this unchanged?** If it
-needs that project's labels, paths, people or domain language, it belongs in that project's
-agent file instead — with only the generic shape here. A "shared" file that every consumer
-has to edit locally is worse than no shared file, because `check` will then fail forever and
-people will learn to ignore it.
+The bar, the invariants and the mistakes already made are in [CLAUDE.md](CLAUDE.md).
+Work here is tracked as issues in this repo; file before you work, close with evidence.

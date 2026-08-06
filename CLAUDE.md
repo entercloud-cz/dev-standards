@@ -1,0 +1,109 @@
+# CLAUDE.md — working in dev-standards
+
+This repo publishes the **reusable** parts of the org's working agreement: two Claude Code
+skills and the issue tooling they describe. Consumers **vendor** copies of it; they do not
+reference it live.
+
+[README.md](README.md) covers what a consumer does (install, update, check) and how to cut a
+release. This file covers what someone **editing this repo** has to know — read it first, and
+don't repeat here what README already says.
+
+## The one rule
+
+**Nothing in `skills/` or `scripts/` may name a project** — no repository slug, no username,
+no label name, no file path belonging to one product, no domain vocabulary. Consumers keep
+that in `.dev-standards.json` (tooling config) and in their own agent file (ownership map,
+label meanings, commands).
+
+The bar for adding anything: **would another product in the org use it unchanged?** A
+"shared" file that every consumer edits locally is worse than no shared file — `check` then
+fails forever and people learn to ignore a red build.
+
+## Invariants
+
+1. **The vendored payload is declared in `PAYLOAD` in `bin/dev-standards.mjs`**
+   (`skills/` → `.claude/skills/`, `scripts/` → `scripts/`). Moving or renaming a payload
+   file changes where it lands in every consumer, and the old copy survives there — an
+   `update` never deletes. Rename only when you intend every consumer to carry both until
+   someone removes one by hand.
+2. **`scripts/` is copied as one unit** because `seed-issues.mjs` and
+   `sync-backlog-index.mjs` import `./lib/config.mjs` by relative path. Splitting them
+   across payload entries breaks that import in the consumer, not here.
+3. **`version` in `package.json` is bumped in the same change as the tag.** The CLI reports
+   the package version and `install`/`update` writes it into the consumer's
+   `.dev-standards.json`, so a mismatch makes a project look pinned to a version that does
+   not exist. (Release steps: README → *Changing a shared skill or script*.)
+4. **Config is required, never guessed.** `scripts/lib/config.mjs` throws on a missing
+   `.dev-standards.json` or a missing `issueFlow.repo`. Defaulting the tracker repo would
+   file issues into someone else's project.
+5. **Never hard-code a lane, a label or a document path.** Derive lanes from the configured
+   owners; take paths from config with a conventional default. This is the invariant that
+   already broke once — see below.
+6. **`check` must stay offline.** It recomputes hashes against `.dev-standards.json`. It is
+   a CI gate, so a network dependency would make an unrelated outage look like drift.
+
+## Gotchas (learned the hard way, 2026-08-06)
+
+- **Grepping for repository names does not prove a file is generic.** After a clean grep the
+  scripts still described lanes as `track/app`/`track/infra`, pointed at `CLAUDE.md` by
+  filename, and called the reserve "the P2 reserve" — `P2` is a label a project chooses, not
+  a concept. Read the prose, not just the identifiers.
+- **The bug a grep would never have found:** `sync-backlog-index.mjs` iterated a hard-coded
+  `['infra','app','both']` lane order. A project with different lane names would have
+  produced an index that **silently omitted its own issues** — no error, just missing rows.
+  Anything that enumerates project vocabulary must derive it.
+- **Templates belong in the org `.github` repo, not here.** GitHub distributes community
+  health files from `entercloud-cz/.github`; a second copy here would be the copy GitHub
+  never reads, which is the one that rots unnoticed.
+- **Claude Code has no skill composition.** No `requires` field, and a skill instructing the
+  model to invoke another skill is model-discretion, not a contract. **Do not build a "root"
+  skill** that dispatches to the others: it adds a hop that can be skipped, the sub-skills
+  stay independently invocable anyway, and a mandatory rule still needs a trigger line in the
+  consumer's agent file.
+- **A skill's reach is controlled by two supported mechanisms**, not by a dispatcher:
+  `paths` globs in the frontmatter (surface it only for relevant files — `docs-flow` uses
+  this) and `skillOverrides` in a consumer's `.claude/settings.json`
+  (`"on"` · `"name-only"` · `"user-invocable-only"` · `"off"`).
+- **Skills are discovered live** from an existing `.claude/skills/` directory, but creating
+  that directory for the first time needs a session restart. Worth saying to a consumer who
+  reports "the skill isn't there".
+
+## Decisions already taken
+
+Recorded here rather than as separate records because there are three; if they multiply,
+graduate them into `docs/decisions/` the way the `docs-flow` skill describes.
+
+**Vendored copies, not a submodule or a personal clone.** A clone must work with zero setup:
+Claude Code discovers skills from files on disk, and any mechanism needing a second command
+(`git submodule update`, a per-developer clone) will one day not be run — silently, on
+someone else's machine. Copies are also reviewable in a PR and pin a version per repo.
+*Rejected:* submodule (detached HEAD, `--recursive`, forgotten updates), personal-level
+install (no pin, invisible in the repo, each machine differs), npm registry package (needs a
+registry for five markdown and JS files).
+*Cost accepted:* copies can be edited locally, which is why `check` exists.
+
+**Updates are deliberate, never automatic.** A skill governs how work is done, so a change
+to it should be seen by the person it governs. *Rejected:* a scheduled bot opening update PRs
+in every consumer — it would trade a stale skill for PR noise nobody reads.
+
+**Templates live in the org `.github` repo.** See the gotcha above.
+
+## Working in this repo
+
+- **Work is tracked as issues in this repo** (`gh issue list -R entercloud-cz/dev-standards`).
+  The `issue-flow` discipline applies: file before working, close with evidence — what
+  changed and how you know it works.
+- The two skills are **published** here, not vendored into here: that would put two copies of
+  the same file in one repository, and `check` would compare a file against itself. When
+  working here, follow their content directly.
+- **Verification before a release** — all offline:
+  ```bash
+  node --check bin/dev-standards.mjs scripts/*.mjs scripts/lib/*.mjs
+  node bin/dev-standards.mjs list                 # payload is what you expect
+  (cd "$(mktemp -d)" && node <repo>/bin/dev-standards.mjs install)   # install into a scratch dir
+  python3 -c "import yaml;yaml.safe_load(open('.github/workflows/dev-standards-check.yml'))"
+  ```
+  Then, in a real consumer: `update`, run its tooling, and `check` — a change that breaks a
+  consumer's scripts cannot be seen from inside this repo.
+- Commit messages end with the Claude co-author trailer. Commit and push only when asked.
+- Reply to the user in Czech; code, comments, commits and docs stay in English.
