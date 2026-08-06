@@ -55,7 +55,12 @@ const PRIO_ORDER = { P0: 0, P1: 1, P2: 2, 'P?': 3 };
 const lines = [];
 let open = 0, closed = 0;
 
-for (const track of ['infra', 'app', 'both', 'untracked']) {
+// Lane order: whatever the project configured, then cross-lane, then unlabelled — so the
+// index does not hard-code one project's lane names.
+const laneOrder = [...Object.keys(CFG.owners), 'both', 'untracked']
+  .filter((l, idx, all) => all.indexOf(l) === idx);
+const lanes = [...new Set([...laneOrder, ...issues.map(trackOf)])];
+for (const track of lanes) {
   const mine = issues.filter((i) => trackOf(i) === track);
   if (!mine.length) continue;
   mine.sort((a, b) => (PRIO_ORDER[prioOf(a)] - PRIO_ORDER[prioOf(b)]) || (a.number - b.number));
@@ -74,15 +79,15 @@ for (const track of ['infra', 'app', 'both', 'untracked']) {
   lines.push('');
 }
 
-// The P2 reserve: enumerated here so low-priority work is visible and countable
-// instead of dissolving into the prose of the sections below.
+// The reserve: enumerated here so low-priority work is visible and countable instead of
+// dissolving into the prose of the sections below.
 const pending = reserve.filter((r) => !liveTitles.has(r.title));
 const reserveLines = [];
 if (pending.length) {
-  reserveLines.push(`#### Reserve — ${pending.length} P2 items, not yet issues`, '');
+  reserveLines.push(`#### Reserve — ${pending.length} low-priority items, not yet issues`, '');
   reserveLines.push('_Promote one with `node scripts/seed-issues.mjs --only=<slug>` (then write its'
     + ` acceptance criteria and re-run this script). Detail: \`${CFG.manifest}\` → \`reserve\`._`, '');
-  for (const track of ['infra', 'app', 'both']) {
+  for (const track of lanes) {
     const mine = pending.filter((r) => r.track === track);
     if (!mine.length) continue;
     reserveLines.push(`**${track}** (${mine.length})  ${mine.map((r) => `${r.slug} \`${r.size}\``).join(' · ')}`, '');
@@ -92,7 +97,7 @@ if (pending.length) {
 const block = [
   BEGIN,
   '',
-  `_${open} open · ${closed} closed · ${pending.length} in the P2 reserve · refreshed by `
+  `_${open} open · ${closed} closed · ${pending.length} in the reserve · refreshed by `
     + '`node scripts/sync-backlog-index.mjs`. Titles and detail live on GitHub — `gh issue view <n>`._',
   '',
   ...lines,

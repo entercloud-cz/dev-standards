@@ -7,9 +7,10 @@
  * and is how you promote a low-priority item out of the reserve later — add a row to the
  * manifest and run this again.
  *
- * Two-track work: every issue carries track/app | track/infra | track/both so
- * each person's `gh issue list -l track/<mine>` is their queue. See the "Track
- * ownership" section in CLAUDE.md for who owns which files.
+ * Lanes: every issue carries a `track/<lane>` label, so `gh issue list --assignee @me`
+ * is a person's queue and `-l track/<lane>` is a whole lane. The lane names, their
+ * owners and the file-ownership map are the PROJECT's — see .dev-standards.json and the
+ * project's agent file.
  *
  *   node scripts/seed-issues.mjs --dry-run     # print the plan, touch nothing
  *   node scripts/seed-issues.mjs               # create what is missing
@@ -46,14 +47,14 @@ function step(action, what) {
 }
 
 // ── Issue body ───────────────────────────────────────────────────────────────
-// Fixed skeleton so both tracks read the same shape: why it matters, what "done"
-// means, and which files it will touch (with the owning track, because that is
-// what decides who may edit them).
+// Fixed skeleton so every lane reads the same shape: why it matters, what "done"
+// means, and which files it will touch (with the owning lane, because that is what
+// decides who may edit them).
 function renderBody(i) {
-  const done = (i.done && i.done.length ? i.done : ['_TODO: write verifiable acceptance criteria (promoted from the P2 reserve)._'])
+  const done = (i.done && i.done.length ? i.done : ['_TODO: write verifiable acceptance criteria (promoted from the reserve)._'])
     .map((d) => (d.startsWith('_') ? d : `- [ ] ${d}`)).join('\n');
   const needs = i.needs
-    ? `\n**Needs first:** \`${i.needs}\` track — do that half before the other side can finish.\n`
+    ? `\n**Needs first:** the \`${i.needs}\` lane — that half must land before the other side can finish.\n`
     : '';
   return `**Source:** ${i.source}
 **Why it matters:** ${i.why}
@@ -88,9 +89,9 @@ const assigneeFor = (i) => {
 // ── Main ─────────────────────────────────────────────────────────────────────
 const manifest = JSON.parse(readFileSync(MANIFEST, 'utf8'));
 const reserve = manifest.reserve || [];
-// A default run seeds only `issues`. `--only` ALSO reaches into the P2 reserve, so
-// promoting a low-priority item is one command — that reserve is the whole point of
-// keeping low-priority work as structured data instead of prose nobody re-reads.
+// A default run seeds only `issues`. `--only` ALSO reaches into the reserve, so promoting
+// a low-priority item is one command — that reserve is the whole point of keeping
+// low-priority work as structured data instead of prose nobody re-reads.
 const pool = [...manifest.issues, ...reserve];
 const issues = ONLY.length ? pool.filter((i) => ONLY.includes(i.slug)) : manifest.issues;
 if (ONLY.length && issues.length !== ONLY.length) {
@@ -100,7 +101,7 @@ if (ONLY.length && issues.length !== ONLY.length) {
 }
 for (const i of issues) {
   if (reserve.includes(i)) {
-    console.log(`Note: '${i.slug}' comes from the P2 reserve — it has no acceptance criteria yet.`);
+    console.log(`Note: '${i.slug}' comes from the reserve — it has no acceptance criteria yet.`);
     console.log('      Write "Done when" into the issue after creating it, and move the entry into `issues`.');
   }
 }
