@@ -10,6 +10,8 @@ for the parts of our working agreement that are not specific to any one product:
 | `app-design` skill — the order of design artifacts for a new web application, and the discipline that keeps a design honest | `skills/app-design/` | `.claude/skills/app-design/` |
 | `frontend-design` skill — graphic design of UIs; vendored verbatim from [anthropics/skills](https://github.com/anthropics/skills) (Apache 2.0, see its `NOTICE`) | `skills/frontend-design/` | `.claude/skills/frontend-design/` |
 | `azure-deploy` skill — Azure architecture and deployment discipline: Bicep layering, the two-pipeline ownership split, secret flows, GitHub Actions shape | `skills/azure-deploy/` | `.claude/skills/azure-deploy/` |
+| `webapp-testing` skill — drive a real browser (Playwright) to validate a web app; vendored verbatim from [anthropics/skills](https://github.com/anthropics/skills) (Apache 2.0, see its `NOTICE`) | `skills/webapp-testing/` | `.claude/skills/webapp-testing/` |
+| `db-migration` skill — schema-change discipline: guarded idempotent migrations, expand/contract, isolation seams | `skills/db-migration/` | `.claude/skills/db-migration/` |
 | Issue-flow tooling — manifest-driven issue seeding + the deterministic reserve block, and `--emit` for the live tracker view | `scripts/` | `scripts/` |
 | Reusable drift-check workflow | `.github/workflows/dev-standards-check.yml` | `uses:` from a consumer workflow |
 
