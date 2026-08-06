@@ -78,8 +78,9 @@ fails forever and people learn to ignore a red build.
 
 ## Decisions already taken
 
-Recorded here rather than as separate records because there are three; if they multiply,
-graduate them into `docs/decisions/` the way the `docs-flow` skill describes.
+Recorded here rather than as separate records while they are few; when they stop fitting
+on one screen, graduate them into `docs/decisions/` in the format the `app-design` skill
+carries.
 
 **Vendored copies, not a submodule or a personal clone.** A clone must work with zero setup:
 Claude Code discovers skills from files on disk, and any mechanism needing a second command
