@@ -131,8 +131,10 @@ if (EMIT) {
   const liveTitles = new Set(issues.map((i) => i.title));
   const stale = pending.filter((r) => liveTitles.has(r.title));
   if (stale.length) {
-    console.error(`\nWARNING: ${stale.length} reserve entr${stale.length === 1 ? 'y is' : 'ies are'} already tracker items`
-      + ` — move ${stale.length === 1 ? 'it' : 'them'} from \`reserve\` into \`issues\` in ${CFG.manifest}:`);
+    const one = stale.length === 1;
+    console.error(`\nWARNING: ${stale.length} reserve entr${one ? 'y is' : 'ies are'} already`
+      + ` ${one ? 'a tracker item' : 'tracker items'} — move ${one ? 'it' : 'them'} from`
+      + ` \`reserve\` into \`issues\` in ${CFG.manifest}:`);
     for (const r of stale) console.error(`  - ${r.slug}`);
     process.exit(1);
   }
