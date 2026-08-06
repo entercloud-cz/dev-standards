@@ -108,22 +108,16 @@ const block = [
   END,
 ].join('\n');
 
+// The block is only ever written between the two markers — the script does not guess
+// where an index "should" go in a document it did not generate.
 const src = readFileSync(BACKLOG, 'utf8');
-let next;
-if (src.includes(BEGIN) && src.includes(END)) {
-  next = src.replace(new RegExp(`${BEGIN}[\\s\\S]*?${END}`), block);
-} else {
-  // First run after the static index: replace the hand-written list that follows
-  // the "### Index" heading, up to the next horizontal rule.
-  const heading = '### Index — issue number, priority, slug';
-  const at = src.indexOf(heading);
-  if (at < 0) {
-    console.error(`Could not find "${heading}" in ${CFG.workDocument} — add the markers by hand:\n${BEGIN}\n${END}`);
-    process.exit(1);
-  }
-  const restAt = src.indexOf('\n---', at);
-  next = src.slice(0, at) + '### Index — issues by track\n\n' + block + '\n' + src.slice(restAt);
+const begin = src.indexOf(BEGIN);
+const end = src.indexOf(END, begin + BEGIN.length);
+if (begin < 0 || end < 0) {
+  console.error(`No index markers in ${CFG.workDocument} — add them where the index should live:\n${BEGIN}\n${END}`);
+  process.exit(1);
 }
+const next = src.slice(0, begin) + block + src.slice(end + END.length);
 
 if (next === src) {
   console.log(`Index already current (${open} open, ${closed} closed).`);
