@@ -1,8 +1,8 @@
 # CLAUDE.md — working in dev-standards
 
-This repo publishes the **reusable** parts of the org's working agreement: two Claude Code
-skills and the issue tooling they describe. Consumers **vendor** copies of it; they do not
-reference it live.
+This repo publishes the **reusable** parts of the org's working agreement: a set of Claude
+Code skills and the issue tooling they describe. Consumers **vendor** copies of it; they do
+not reference it live.
 
 [README.md](README.md) covers what a consumer does (install, update, check) and how to cut a
 release. This file covers what someone **editing this repo** has to know — read it first, and
@@ -101,7 +101,7 @@ in every consumer — it would trade a stale skill for PR noise nobody reads.
 - **Work is tracked as issues in this repo** (`gh issue list -R entercloud-cz/dev-standards`).
   The `issue-flow` discipline applies: file before working, close with evidence — what
   changed and how you know it works.
-- The two skills are **published** here, not vendored into here: that would put two copies of
+- The skills are **published** here, not vendored into here: that would put two copies of
   the same file in one repository, and `check` would compare a file against itself. When
   working here, follow their content directly.
 - **Verification before a release** — all offline:
