@@ -1,0 +1,9 @@
+# CODEOWNERS — the only part of a lane split that works even when the rule is
+# forgotten. Last match wins, so order matters: put the broad rules first and the
+# re-assertions last. Fill in once lanes and owners are decided; delete if the
+# project has a single owner.
+#
+# Example shape (replace with this project's lanes):
+# *            @org/team-or-user
+# /infra/      @infra-owner
+# /docs/       @org/team-or-user

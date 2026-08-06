@@ -1,0 +1,13 @@
+# Fails when a vendored dev-standards file was edited locally — that edit would be
+# overwritten by the next update and never reach the other repos. A yellow annotation
+# (build stays green) means a newer dev-standards release exists.
+name: standards
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  standards:
+    uses: entercloud-cz/dev-standards/.github/workflows/dev-standards-check.yml@main

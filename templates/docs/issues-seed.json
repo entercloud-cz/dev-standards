@@ -1,0 +1,14 @@
+{
+  "$comment": "Issue manifest for scripts/seed-issues.mjs. `issues` is a SEEDING QUEUE — an entry is removed automatically once the tracker owns it. `reserve` holds low-priority items that are deliberately not tracker items yet (slug, track, size, source, why — no acceptance criteria). Add `track/<lane>` labels below once lanes are decided.",
+  "labels": [
+    { "name": "P0", "color": "b60205", "description": "Correctness or security — fix before feature work" },
+    { "name": "P1", "color": "d93f0b", "description": "User-visible breakage or a scale blocker" },
+    { "name": "P2", "color": "fbca04", "description": "Debt or cosmetic — trigger-gated, lives in the reserve" },
+    { "name": "size/S", "color": "c2e0c6", "description": "Hours" },
+    { "name": "size/M", "color": "bfdadc", "description": "A day or two" },
+    { "name": "size/L", "color": "d4c5f9", "description": "Several days" }
+  ],
+  "milestones": [],
+  "issues": [],
+  "reserve": []
+}

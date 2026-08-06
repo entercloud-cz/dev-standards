@@ -29,7 +29,23 @@ That separation is what makes these reusable.
 adding anything, the decisions already taken and the failure modes the first release
 exposed.
 
-## Using it in a project
+## Starting a new project
+
+```bash
+mkdir my-app && cd my-app
+npx github:entercloud-cz/dev-standards init
+```
+
+`init` initializes git if needed, vendors the standards, and writes starter files —
+the agent file with every skill's trigger line, the work document with its generated-block
+markers, an issue manifest with the org-default labels, the drift-check workflow and a
+commented CODEOWNERS — **only where absent**, which also makes it the way to adopt the
+standards into an existing repository. From that moment the starter files are the
+project's own (only `.claude/skills/` and `scripts/` stay vendored). `init` prints the
+remaining manual steps, including the session restart that first-time skill discovery
+needs.
+
+## Using it in an existing project
 
 ```bash
 npx github:entercloud-cz/dev-standards install

@@ -8,7 +8,8 @@
  * copy's provenance is recorded in `.dev-standards.json` — source, version and a hash per
  * file — so drift is detectable instead of invisible.
  *
- *   npx github:entercloud-cz/dev-standards install     # first time
+ *   npx github:entercloud-cz/dev-standards init        # provision a NEW project (or adopt)
+ *   npx github:entercloud-cz/dev-standards install     # vendor into an existing project
  *   npx github:entercloud-cz/dev-standards update      # after a new release
  *   npx github:entercloud-cz/dev-standards check       # CI: vendored copy still pristine?
  *   npx github:entercloud-cz/dev-standards list        # what this version provides
@@ -17,8 +18,9 @@
  */
 
 import { createHash } from 'node:crypto';
+import { execFileSync } from 'node:child_process';
 import { appendFileSync, readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, statSync } from 'node:fs';
-import { dirname, join, relative } from 'node:path';
+import { basename, dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const PKG_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -183,11 +185,49 @@ function list() {
   for (const { dest } of payloadFiles()) console.log(`  ${dest}`);
 }
 
+// ── init ─────────────────────────────────────────────────────────────────────
+// Provision a new project: git, the vendored standards, and starter files from
+// templates/. Starters are written ONLY where absent and belong to the project from
+// then on (never in PAYLOAD, never drift-checked) — which also makes init the safe way
+// to adopt the standards into an existing repository.
+function init() {
+  if (!existsSync(join(PROJECT, '.git'))) {
+    // -b main: the starter workflow triggers on main, so the default branch must match.
+    execFileSync('git', ['init', '-b', 'main'], { stdio: 'inherit' });
+  }
+
+  vendor(existsSync(MANIFEST) ? 'update' : 'install');
+
+  const project = basename(PROJECT);
+  const tplRoot = join(PKG_ROOT, 'templates');
+  console.log('');
+  let kept = 0;
+  for (const rel of walk(tplRoot)) {
+    const target = join(PROJECT, rel);
+    if (existsSync(target)) { kept++; continue; }
+    mkdirSync(dirname(target), { recursive: true });
+    writeFileSync(target, readFileSync(join(tplRoot, rel), 'utf8').split('{{PROJECT}}').join(project));
+    console.log(`  started ${rel}`);
+  }
+  if (kept) console.log(`  (${kept} starter file(s) already existed — left untouched)`);
+
+  console.log(`\nProject '${project}' provisioned. The starter files are YOURS to edit —`
+    + ` only .claude/skills/ and scripts/ stay owned by ${SOURCE}.`);
+  console.log(`\nNext steps:`);
+  console.log(`  1. Fill the TODOs in CLAUDE.md and the issueFlow block of .dev-standards.json (repo, owners).`);
+  console.log(`  2. Create and push the GitHub repository, e.g.:`);
+  console.log(`       gh repo create <org>/${project} --private --source=. --push`);
+  console.log(`  3. Seed the labels: node scripts/seed-issues.mjs`);
+  console.log(`  4. RESTART the Claude Code session — a first-time .claude/skills/ needs one to be discovered.`);
+  console.log(`  5. Start with the app-design skill: it creates the document set this repo does not have yet.`);
+}
+
 const cmd = process.argv[2];
 if (cmd === 'install' || cmd === 'update') vendor(cmd);
+else if (cmd === 'init') init();
 else if (cmd === 'check') check();
 else if (cmd === 'list') list();
 else {
-  console.log('Usage: dev-standards <install|update|check|list>');
+  console.log('Usage: dev-standards <init|install|update|check|list>');
   process.exit(cmd ? 1 : 0);
 }

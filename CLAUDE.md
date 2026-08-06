@@ -49,6 +49,11 @@ fails forever and people learn to ignore a red build.
    payload directory ships to every consumer, so either must land in the same change as a
    payload exclusion for dev files in the CLI. Until then, `SKILL.md` and script headers
    are the service's documentation, and dev invariants live here.
+8. **`templates/` is distributed but never vendored.** `init` writes its files into a
+   consumer once, only where absent — from then on the consumer OWNS them, so they must
+   never enter `PAYLOAD`: a hash-checked starter would make `check` fail the moment the
+   project fills in its first TODO. (The `.github`-repo gotcha does not apply — these are
+   per-project starting points, not community health files GitHub serves org-wide.)
 
 ## Gotchas (learned the hard way, 2026-08-06)
 
