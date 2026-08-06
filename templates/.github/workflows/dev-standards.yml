@@ -7,6 +7,10 @@ on:
   push:
     branches: [main]
   pull_request:
+  # A gate that only a webhook can trigger is unreachable exactly when webhooks are
+  # throttled — during the 2026-08-06 Actions incident push and pull_request events
+  # started no runs for hours, while changes were still being merged.
+  workflow_dispatch:
 
 jobs:
   standards:
