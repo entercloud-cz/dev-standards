@@ -41,6 +41,14 @@ fails forever and people learn to ignore a red build.
    already broke once — see below.
 6. **`check` must stay offline.** It recomputes hashes against `.dev-standards.json`. It is
    a CI gate, so a network dependency would make an unrelated outage look like drift.
+7. **A new kind of shared service is a new top-level directory with its own `PAYLOAD`
+   entry** — never a subfolder of an existing payload unit, because relative paths inside
+   a unit are what land in every consumer (see invariant 1). Per-service docs wait for a
+   trigger: a service that outgrows one file earns its own README, and a directory that
+   accumulates dev-only invariants earns a nested `CLAUDE.md` — but everything under a
+   payload directory ships to every consumer, so either must land in the same change as a
+   payload exclusion for dev files in the CLI. Until then, `SKILL.md` and script headers
+   are the service's documentation, and dev invariants live here.
 
 ## Gotchas (learned the hard way, 2026-08-06)
 
