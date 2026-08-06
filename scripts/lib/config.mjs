@@ -36,6 +36,9 @@ export function issueFlowConfig(root = process.cwd()) {
     // labels differently overrides it here — the scripts never assume the P scheme.
     labels: { priorities: ['P0', 'P1', 'P2'], ...(cfg.labels || {}) },
   };
+  if (out.repo === 'ORG/REPO') {
+    throw new Error(`issueFlow.repo in ${CONFIG_FILE} is still the install placeholder — set it to the project's tracker repo`);
+  }
   if (!out.repo) {
     throw new Error(`issueFlow.repo is required in ${CONFIG_FILE} (e.g. "org/repo")`);
   }
