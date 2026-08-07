@@ -102,9 +102,12 @@ differs because the failure modes do:
 The runner can crash after statement three of five and will be run again — so
 **re-running the mechanism must be a no-op**, whichever way the project achieves it:
 
-- A runner with a **ledger** it honours (a migrations table, checksums) already
-  guarantees the no-op — respect the ledger, and never apply a recorded migration by
-  hand around it.
+- A runner with a **ledger** it honours (a migrations table, checksums) guarantees that
+  *recorded* migrations never re-run — respect it, and never apply a recorded migration
+  by hand around it. The ledger does **not** cover a crash *inside* a migration: where
+  DDL is not transactional, the run dies half-applied and unrecorded, and the re-run
+  replays the applied half — so each migration must still be internally re-runnable
+  (transactional where the platform allows it, guarded statements where it does not).
 - Where migrations run **without a ledger** (operated mode only — shipped mode mandates
   a ledger, see the upgrade contract), every statement is guarded: create-if-absent,
   add-column-if-missing, a probe against the catalog before anything the dialect cannot
