@@ -102,6 +102,18 @@ in every consumer — it would trade a stale skill for PR noise nobody reads.
 
 **Templates live in the org `.github` repo.** See the gotcha above.
 
+**Opt-in capabilities ship as a skill with reference skeletons, never as payload or
+templates** (v1.13.0, `browser-check`). The skill carries the discipline plus a
+`references/` directory the model instantiates into a consumer **only on invitation**;
+the copies are the project's own from that moment, because their content (fixtures,
+selectors) is project vocabulary.
+*Rejected:* a payload unit (`scripts/`-style or a new top-level dir) — lands hash-checked
+in every consumer, so it is not opt-in, and the consumer MUST edit fixtures, which makes
+`check` fail forever (the exact anti-pattern under "The one rule"); a `templates/`
+starter — `init` writes it into every new project, and a deleted starter resurrects on
+the next `init` run; editing the vendored `webapp-testing` — foreign, verbatim, its
+NOTICE forbids it.
+
 **A versioned document never mirrors live tracker state** (v1.5.0). `sync-backlog-index.mjs`
 used to write open/closed-per-lane into the work document. That mirror can only be refreshed
 *after* an item closes — i.e. after the change that closed it merged — so every finished

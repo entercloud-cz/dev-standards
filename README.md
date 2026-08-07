@@ -13,6 +13,7 @@ for the parts of our working agreement that are not specific to any one product:
 | `azure-deploy` skill — Azure architecture and deployment discipline: Bicep layering, the two-pipeline ownership split, secret flows, GitHub Actions shape | `skills/azure-deploy/` | `.claude/skills/azure-deploy/` |
 | `webapp-testing` skill — drive a real browser (Playwright) to validate a web app; vendored verbatim from [anthropics/skills](https://github.com/anthropics/skills) (Apache 2.0, see its `NOTICE`) | `skills/webapp-testing/` | `.claude/skills/webapp-testing/` |
 | `db-migration` skill — schema-change discipline: guarded idempotent migrations, expand/contract, isolation seams | `skills/db-migration/` | `.claude/skills/db-migration/` |
+| `browser-check` skill — **opt-in** browser verification: fixture server + Playwright page checker, instantiated into a project only on invitation | `skills/browser-check/` | `.claude/skills/browser-check/` |
 | Issue-flow tooling — manifest-driven issue seeding + the deterministic reserve block, and `--emit` for the live tracker view | `scripts/` | `scripts/` |
 | Reusable drift-check workflow | `.github/workflows/dev-standards-check.yml` | `uses:` from a consumer workflow |
 | Reusable backlog workflow — offline reserve gate + live lane view in the run summary | `.github/workflows/dev-standards-backlog.yml` | `uses:` from a consumer workflow (starter caller written by `init`) |
