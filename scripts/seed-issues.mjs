@@ -143,15 +143,43 @@ for (const m of manifestMilestones) {
   createdMilestones++;
 }
 
-// 3) Issues — matched on the exact title, so re-running never duplicates.
-const existingIssues = new Map(
-  gh(['issue', 'list', '-R', REPO, '--state', 'all', '--limit', '500', '--json', 'number,title'], { json: true })
-    .map((i) => [i.title, i.number])
-);
+// 3) Issues. Identity is exact-title based, so the comparison set must be complete —
+// at the cap, older issues fall out of it and re-seeding would duplicate them. Refuse
+// rather than guess.
+const existingList = gh(['issue', 'list', '-R', REPO, '--state', 'all', '--limit', '1000', '--json', 'number,title'], { json: true });
+if (existingList.length >= 1000) {
+  console.error('Tracker has 1000+ issues — the exact-title identity check is no longer reliable. Refusing to seed.');
+  process.exit(1);
+}
+const existingIssues = new Map(existingList.map((i) => [i.title, i.number]));
+
+// A title match alone is NOT identity: an unrelated issue can share a title. What
+// proves a tracker item is THIS entry is the seeded marker in its body. A title match
+// without the marker is a conflict — create nothing, remove nothing, exit non-zero —
+// because acting on it either duplicates the item or deletes the entry against the
+// wrong issue.
+const ownership = new Map();
+const ownsEntry = (entry, number) => {
+  if (!ownership.has(entry.title)) {
+    const body = gh(['issue', 'view', String(number), '-R', REPO, '--json', 'body'], { json: true }).body || '';
+    ownership.set(entry.title, body.includes(`(slug: \`${entry.slug}\`)`));
+  }
+  return ownership.get(entry.title);
+};
+
 let createdIssues = 0, skipped = 0;
 const createdTitles = new Set();
+const ownedTitles = new Set();
+const conflicts = [];
 for (const i of issues) {
-  if (existingIssues.has(i.title)) { skipped++; continue; }
+  const existingNo = existingIssues.get(i.title);
+  if (existingNo !== undefined) {
+    if (ownsEntry(i, existingNo)) { skipped++; ownedTitles.add(i.title); continue; }
+    conflicts.push(i.slug);
+    console.error(`CONFLICT: '${i.slug}' — issue #${existingNo} has the same title but no seeded marker for this slug.`);
+    console.error('          Rename one of them; nothing was created and the entry stays in the manifest.');
+    continue;
+  }
   const labels = labelsFor(i);
   step('create issue', `[${i.track}/${i.priority || 'no priority yet'}] ${i.title}`);
   if (!DRY) {
@@ -174,8 +202,17 @@ for (const i of issues) {
 // remove it (uniformly from `issues` and `reserve`) so the file holds only what the
 // repository still owns. This is also what makes the reserve authoritative for
 // sync-backlog-index without any live lookup.
-const owned = new Set([...existingIssues.keys(), ...createdTitles]);
-const keep = (list) => list.filter((i) => !owned.has(i.title));
+// Removal must be as strict as creation: only entries the tracker VERIFIABLY owns
+// (created this run, or title + seeded marker) leave the manifest. A same-titled
+// foreign issue keeps the entry — it was never filed.
+const keep = (list) => list.filter((e) => {
+  if (createdTitles.has(e.title) || ownedTitles.has(e.title)) return false;
+  const n = existingIssues.get(e.title);
+  if (n === undefined) return true;
+  if (ownsEntry(e, n)) return false;
+  console.error(`Note: '${e.slug}' shares a title with unrelated issue #${n} — kept in the manifest.`);
+  return true;
+});
 const nextIssues = keep(manifest.issues || []);
 const nextReserve = keep(reserve);
 const removedEntries = ((manifest.issues || []).length - nextIssues.length) + (reserve.length - nextReserve.length);
@@ -193,3 +230,7 @@ console.log(`\nLabels created: ${createdLabels} (${manifestLabels.length - creat
 console.log(`Milestones created: ${createdMilestones} (${manifestMilestones.length - createdMilestones} already present)`);
 console.log(`Issues created: ${createdIssues}, already present: ${skipped}, total in manifest: ${issues.length}`);
 if (DRY) console.log('\nDry run — nothing was created. Re-run without --dry-run to apply.');
+if (conflicts.length) {
+  console.error(`\n${conflicts.length} title conflict(s): ${conflicts.join(', ')} — resolve before re-running.`);
+  process.exit(1);
+}
