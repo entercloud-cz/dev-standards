@@ -83,6 +83,27 @@ function vendor(cmd) {
     process.exit(1);
   }
 
+  // Preflight: never destroy local edits silently. With a manifest, "locally modified"
+  // means the target's hash differs from the recorded one; on a first install (no
+  // manifest), any existing target with different content is suspect. Either way the
+  // overwrite must be deliberate: --force.
+  const FORCE = process.argv.includes('--force');
+  const dirty = [];
+  for (const { src, dest } of payloadFiles()) {
+    const target = join(PROJECT, dest);
+    if (!existsSync(target)) continue;
+    const cur = readFileSync(target);
+    if (cur.equals(readFileSync(src))) continue;
+    if (!previous?.vendored?.[dest] || sha(cur) !== previous.vendored[dest]) dirty.push(dest);
+  }
+  if (dirty.length && !FORCE) {
+    console.error(`Refusing to overwrite ${dirty.length} locally modified file(s):\n`);
+    for (const d of dirty) console.error(`  ${d}`);
+    console.error(`\nThese differ from what this project vendored. Send the change upstream or discard`);
+    console.error(`it, then re-run — or re-run with --force to overwrite deliberately.`);
+    process.exit(1);
+  }
+
   const vendored = {};
   let written = 0, unchanged = 0;
   for (const { src, dest } of payloadFiles()) {
@@ -152,14 +173,14 @@ function check() {
     if (sha(readFileSync(target)) !== expected) problems.push(`MODIFIED ${dest}`);
   }
   if (problems.length) {
-    console.error(`Vendored files differ from ${m.source}@${m.version}:\n`);
+    console.error(`Vendored files differ from the manifest pinned to ${m.source}@${m.version}:\n`);
     for (const p of problems) console.error(`  ${p}`);
     console.error(`\nThese files are owned by ${m.source}. Send the change upstream, release,`);
     console.error(`then run: npx github:${SOURCE} update`);
     console.error(`(If a file was deleted on purpose, run update to re-record the manifest.)`);
     process.exit(1);
   }
-  console.log(`Vendored copy matches ${m.source}@${m.version} `
+  console.log(`Vendored files match the manifest pinned to ${m.source}@${m.version} `
     + `(${Object.keys(m.vendored).length} files).`);
   if (m.version !== VERSION) {
     console.log(`Note: this CLI is ${VERSION}; the project pins ${m.version}. `
