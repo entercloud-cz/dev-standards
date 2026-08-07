@@ -47,7 +47,16 @@ const configuredLanes = [...Object.keys(CFG.owners), 'both', 'untracked']
 let manifest = { issues: [], reserve: [] };
 try {
   manifest = JSON.parse(readFileSync(join(ROOT, CFG.manifest), 'utf8'));
-} catch (_) { /* manifest optional: the block is then empty */ }
+} catch (e) {
+  // An ABSENT manifest is legitimately optional (the block is then empty). Anything
+  // else — a parse error, a permission error — must fail loudly: rendering an empty
+  // reserve because the authoritative source could not be read is how CI stays green
+  // exactly when it should not.
+  if (e.code !== 'ENOENT') {
+    console.error(`Cannot read ${CFG.manifest}: ${e.message}`);
+    process.exit(1);
+  }
+}
 // The manifest is a queue: seed-issues removes an entry the moment the tracker owns it,
 // so `reserve` is authoritative as-is — no live lookup, which is what keeps this block
 // deterministic and offline.
