@@ -95,10 +95,16 @@ readable in the repo and in PR checks; the reusable job itself displays as
 `dev-standards check` whatever the caller is named. An existing consumer renames its own
 caller file — that file is the project's, not vendored, so `update` will not do it.
 
-The check is local and needs no network beyond fetching the CLI. It fails when a vendored
-file differs from the pinned version — the failure worth catching, because a shared skill
-edited inside one consumer gets overwritten by the next `update` and never reaches the
-other repos.
+The check is local and needs no network beyond fetching the CLI — which the workflow pins
+to the version in `.dev-standards.json`, so CI executes exactly the release the project
+vendored against, never upstream HEAD. It fails when a vendored file differs from the
+pinned version — the failure worth catching, because a shared skill edited inside one
+consumer gets overwritten by the next `update` and never reaches the other repos.
+
+`check` is a **seatbelt against accidental drift, not a lock**: the hashes live in the
+project's own `.dev-standards.json`, so deliberately rewriting a file *and* its hash
+passes — and is exactly the kind of change a PR review exists to see. Files a project
+adds under `.claude/skills/` are its own and deliberately unchecked.
 
 When a **newer release** exists than the one the project pins, the run stays green but
 shows a yellow annotation and a job-summary note with the update command. Green-but-noted

@@ -30,5 +30,28 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ inputs.node-version }}
+      - name: Resolve the pinned version
+        id: pin
+        run: |
+          v=$(jq -r '.version // empty' .dev-standards.json 2>/dev/null)
+          if [ -z "$v" ]; then
+            echo "::error::.dev-standards.json is missing or has no version — run: npx github:entercloud-cz/dev-standards install"
+            exit 1
+          fi
+          echo "version=$v" >> "$GITHUB_OUTPUT"
       - name: Vendored standards match the pinned version
-        run: npx --yes github:entercloud-cz/dev-standards check
+        # Pinned fetch: CI executes exactly the CLI release this project vendored
+        # against, never upstream HEAD — deliberate updates stay deliberate in CI too.
+        run: npx --yes "github:entercloud-cz/dev-standards#v${{ steps.pin.outputs.version }}" check
+      - name: Note a newer release (the build stays green)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PINNED: v${{ steps.pin.outputs.version }}
+        run: |
+          latest=$(gh api repos/entercloud-cz/dev-standards/tags --jq '.[].name' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1 || true)
+          newer=$(printf '%s\n%s\n' "$latest" "$PINNED" | sort -V | tail -1)
+          if [ -n "$latest" ] && [ "$latest" != "$PINNED" ] && [ "$newer" = "$latest" ]; then
+            msg="dev-standards $latest is available — this project pins $PINNED. Run: npx github:entercloud-cz/dev-standards update"
+            echo "::warning title=dev-standards update available::$msg"
+            echo "> ⚠️ $msg" >> "$GITHUB_STEP_SUMMARY"
+          fi
