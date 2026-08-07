@@ -49,11 +49,11 @@ different thing.
 4. **Functional design, surface by surface** (shape below). This fills the product
    explanation.
 
-5. **Graphic design.** Use the `frontend-design` skill (vendored alongside this one) for
-   the aesthetic direction — palette, typography, the choices that keep the UI from
-   reading as a template; where it is unavailable, make those choices explicitly and
-   record them. Before the third surface exists, put the shared chrome under the
-   consistency contract (below).
+5. **Graphic design.** Use the `design-brief` skill to elicit the user's brief and let
+   them choose the direction by looking at rendered variants, then the `frontend-design`
+   craft inside the chosen direction (both vendored alongside this one); where they are
+   unavailable, ask and record the choices explicitly. Before the third surface exists,
+   put the shared chrome under the consistency contract (below).
 
 6. **Seed the backlog.** Turn the build plan into tracked items per `issue-flow`: real
    items with acceptance criteria for the first increment, everything low-priority into

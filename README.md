@@ -8,7 +8,8 @@ for the parts of our working agreement that are not specific to any one product:
 | `issue-flow` skill — every request is filed before it is worked, closed with evidence | `skills/issue-flow/` | `.claude/skills/issue-flow/` |
 | `docs-flow` skill — which document holds what, and how to write into it | `skills/docs-flow/` | `.claude/skills/docs-flow/` |
 | `app-design` skill — the order of design artifacts for a new web application, and the discipline that keeps a design honest | `skills/app-design/` | `.claude/skills/app-design/` |
-| `frontend-design` skill — graphic design of UIs; vendored verbatim from [anthropics/skills](https://github.com/anthropics/skills) (Apache 2.0, see its `NOTICE`) | `skills/frontend-design/` | `.claude/skills/frontend-design/` |
+| `design-brief` skill — elicit the design brief and let the user choose the visual direction from rendered variant boards, before any styling | `skills/design-brief/` | `.claude/skills/design-brief/` |
+| `frontend-design` skill — graphic design of UIs, applied inside the direction `design-brief` records; vendored verbatim from [anthropics/skills](https://github.com/anthropics/skills) (Apache 2.0, see its `NOTICE`) | `skills/frontend-design/` | `.claude/skills/frontend-design/` |
 | `azure-deploy` skill — Azure architecture and deployment discipline: Bicep layering, the two-pipeline ownership split, secret flows, GitHub Actions shape | `skills/azure-deploy/` | `.claude/skills/azure-deploy/` |
 | `webapp-testing` skill — drive a real browser (Playwright) to validate a web app; vendored verbatim from [anthropics/skills](https://github.com/anthropics/skills) (Apache 2.0, see its `NOTICE`) | `skills/webapp-testing/` | `.claude/skills/webapp-testing/` |
 | `db-migration` skill — schema-change discipline: guarded idempotent migrations, expand/contract, isolation seams | `skills/db-migration/` | `.claude/skills/db-migration/` |

@@ -15,7 +15,11 @@ Mute a skill this project genuinely cannot use via `skillOverrides` in
   finishing a piece of work.
 - `docs-flow` — before writing into any project document.
 - `app-design` — when designing the application or a module, or writing a decision record.
-- `frontend-design` — when creating or reshaping UI, before the first line of markup.
+- `design-brief` — before the first line of styling, on any redesign request, or when no
+  visual direction is recorded: elicit the brief, let the user choose from rendered
+  variants, record the outcome.
+- `frontend-design` — when creating or reshaping UI, within a chosen and recorded
+  direction (`design-brief`).
 - `webapp-testing` — when a UI change needs a live check as its closing evidence.
 - `azure-deploy` — before touching infrastructure code or a deployment workflow.
 - `db-migration` — before changing a database schema that already holds data.
