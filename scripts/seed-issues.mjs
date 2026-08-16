@@ -17,6 +17,9 @@
  * owners and the file-ownership map are the PROJECT's — see .dev-standards.json and the
  * project's agent file.
  *
+ * An entry missing a field an issue needs stops the whole run before anything is created,
+ * in a dry run as well — so `--dry-run` is a real preflight and not just a preview.
+ *
  *   node scripts/seed-issues.mjs --dry-run     # print the plan, touch nothing
  *   node scripts/seed-issues.mjs               # create what is missing
  *   node scripts/seed-issues.mjs --only=slug-a,slug-b
@@ -118,6 +121,35 @@ if (ONLY.length && issues.length !== ONLY.length) {
   console.error(`Unknown slug(s): ${missing.join(', ')}`);
   process.exit(1);
 }
+// What an entry MUST carry to become an issue. Nothing here checked it before, and JS
+// stringifies `undefined`: a missing title created a real issue called "undefined" and then
+// dropped its manifest entry (the run had created it, so the queue considered it filed),
+// and a missing source threw inside renderBody partway through a run — after earlier
+// entries had already been filed. Refuse the whole run instead, before a label, a milestone
+// or an issue is touched, and in a dry run too: `--dry-run` is where this gets caught.
+//
+// Deliberately NOT required: `priority`, `done`, `files`, `areas`. A reserve entry has no
+// priority and no acceptance criteria until it is promoted, and the body carries a TODO for
+// whichever of those it lacks — that is the documented shape, not an omission.
+const REQUIRED = ['title', 'slug', 'track', 'size', 'source', 'why'];
+const unseedable = issues
+  .map((i) => ({ i, missing: REQUIRED.filter((k) => typeof i[k] !== 'string' || !i[k].trim()) }))
+  .filter(({ missing }) => missing.length);
+if (unseedable.length) {
+  const noun = `entr${unseedable.length === 1 ? 'y' : 'ies'}`;
+  console.error(`${CFG.manifest}: ${unseedable.length} ${noun} cannot be seeded.\n`);
+  for (const { i, missing } of unseedable) {
+    console.error(`  ${i.slug || '(entry with no slug)'} — missing: ${missing.join(', ')}`);
+  }
+  // The reserve is keyed by slug and a project may legitimately keep no titles there, so
+  // this is the expected first failure when promoting rather than a corrupt manifest.
+  if (unseedable.some(({ i, missing }) => reserve.includes(i) && missing.includes('title'))) {
+    console.error(`\nA reserve entry has no title until it is promoted — write one into the entry first.`);
+  }
+  console.error('\nNothing was created.');
+  process.exit(1);
+}
+
 for (const i of issues) {
   if (reserve.includes(i)) {
     console.log(`Note: '${i.slug}' comes from the reserve — it has no acceptance criteria yet.`);
