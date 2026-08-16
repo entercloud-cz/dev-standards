@@ -84,16 +84,56 @@ Distinguish three kinds, whatever the project calls them:
 
 ### Lanes and ownership
 
-When work is split into lanes (by subsystem, by person), an item belongs to the lane that
-owns the **files it will touch** — the ownership map is in the agent file. An item that
-genuinely spans lanes says which half must land first, and is assigned to whoever does that
-half.
+A lane is a slice of the work with **one assignee**, so that "what am I working on" has a
+single answer. Who *reviews* it is a separate axis: a lane whose output is decisions may
+deliberately request review from two people, and that is not a modelling error to tidy up.
+
+Three lanes are the org's vocabulary. **A project uses the subset it needs** — a single-lane
+project is a legitimate shape, and so is one lane per repository, where the split is the
+repository boundary and cross-lane work is a link between two trackers rather than a label.
+Which lanes a project actually has, who owns them and which files they own is in the agent
+file; what follows is what the names mean when a project does adopt them.
+
+| Lane | Owns | An item is in it when |
+|---|---|---|
+| `infra` | the platform: infrastructure code, pipelines, schema and migrations, CI, deployment | its acceptance is about how the system is built, run or deployed |
+| `app` | the application and the surfaces a user meets | its acceptance is about how the product is implemented |
+| `product` | what the product **must** do — the normative specs, wherever the project keeps them | what the item settles is a product decision — read on, because the work may still land in another lane's files |
+
+**Route an item by the files it will touch**, because that is what decides who may edit
+them. Where lanes own separate trees — `infra` against the rest, nearly always — that is the
+whole test.
+
+**The `product` lane is different in kind: its test is the item's content.** An item is
+product's when what it needs is a *decision about what the product must do*, even when
+carrying that decision out will touch files another lane owns. Where the project keeps a
+normative half, the decision gets **written** into those files — which is why the lane owns
+them — but an item does not stop being product's because it also touches code; where the
+project keeps none, the lane owns no files at all and the agent file names which document
+states each lane's acceptance instead. Either way, "the work happens in application code"
+does not make it an `app` item.
+
+**Where a project's routing rule departs from the file test, it says so deliberately** —
+read it as decided, not as a mistake to correct.
+
+An item that genuinely spans lanes says which half must land first, and is assigned to
+whoever does that half. A product item whose decision will later need code is **not**
+automatically one of those. Whether the build rides along in the same item or becomes the
+next one in the lane that owns the code is the project's call — say which, and leave the
+item where it is either way.
+
+**Introducing a lane a project does not have yet is more than adding a label**: it needs an
+owner and a line in the agent file saying what it covers, or nothing routes and the label is
+pure overhead. The order to do it in, what a lane with no files of its own can and cannot
+enforce, and when to refuse one: `references/adopting-a-lane.md`.
 
 **Past two lanes, prefer "blocked on" over "cross-lane".** A cross-lane label is readable
 while there are two lanes and stops being readable the moment there is a third. Most items
 that feel cross-lane are really one lane's work waiting on another: mark them as belonging
-to the lane that does the work, with a marker naming the lane they wait for. Keep the
-cross-lane label for work that genuinely happens in two places at once.
+to the lane whose work the item **is**, with a marker naming the lane they wait for. Where
+that work is a decision, the lane is the one deciding — not the one that will build the
+decision afterwards, which is its own item. Keep the cross-lane label for work that
+genuinely happens in two places at once.
 
 **A code owner without write access is not a code owner.** GitHub does not request review
 from someone who lacks write access to the repository, and does not warn — the file
@@ -167,7 +207,9 @@ Something new that is only low-priority goes into the reserve, not into a docume
 - **Never close an item partially.** If half shipped, comment what remains and leave it
   open, or split it and link both ways.
 - **Stay in your lane's files.** Needing a file another lane owns means the item spans
-  lanes: do your half, mark it, say so.
+  lanes: do your half, mark it, say so. The exception is the `product` lane, routed by
+  content (above): the item stays where it is and what crosses is the *edit*, so name who
+  makes it rather than relabelling the item.
 - **Verify the instance, not the indicator.** When something fails, a service's status
   page is a good lead — it suggests what might be wrong — but never the conclusion.
   Evidence is the run, test or query for *your* change, in both directions: an outage

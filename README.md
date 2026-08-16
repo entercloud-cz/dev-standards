@@ -74,8 +74,15 @@ recording the source, the version and a hash per file. Then:
    — the short form keeps meaning *owner, no contributors*, and contributors are a record of
    who works there, never a second assignee. `crossLaneLabel` names the track used for work
    that genuinely spans lanes (default `both`); rename it only if you are willing to
-   relabel the open items that carry it. `installedAt` is written by the CLI on every
-   install and update, so it dates the copy you have, not the first one.
+   relabel the open items that carry it.
+
+   `installedAt` is written by the CLI on every install and update, so it dates the copy
+   you have, not the first one.
+
+   **`infra` · `app` · `product` is the org's lane vocabulary** — what each owns is in the
+   `issue-flow` skill, and a project adopts the subset it needs (one lane, or one lane per
+   repository, are both fine). Introducing one is more than a label: the order to do it in,
+   and when to refuse, is `issue-flow`'s `references/adopting-a-lane.md`.
 2. Add the drift check to CI (below).
 3. Tell the agent file that these files are **vendored**: do not edit them here, send the
    change upstream.

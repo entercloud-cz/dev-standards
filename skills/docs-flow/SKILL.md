@@ -42,7 +42,8 @@ wrong against. Where a project needs that, the product-explanation role may take
 half — one entry per feature, numbered and superseded like a decision record, saying what
 the product **must** do. The two halves never state the same behaviour, and the descriptive
 side becomes a pointer as each feature ships. Reach for this when something must be
-checkable against intent; it is not a default.
+checkable against intent; it is not a default. What this half means for a project that also
+runs a `product` lane is in `issue-flow`'s `references/adopting-a-lane.md`.
 
 ## When you change something, update exactly one place
 

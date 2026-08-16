@@ -19,6 +19,18 @@ The bar for adding anything: **would another product in the org use it unchanged
 "shared" file that every consumer edits locally is worse than no shared file — `check` then
 fails forever and people learn to ignore a red build.
 
+**The one exception is a named org-wide vocabulary** — currently the three lanes
+`infra`/`app`/`product` (v1.15.0, decision below). It passes the bar: every product uses the
+definitions unchanged and only picks a subset. Two conditions keep it from becoming the
+thing the rule forbids: it is **prose in a skill, never an enumeration in code** (invariant 5
+is unchanged — a script that hard-codes a lane name is still a bug), and **adoption is
+opt-in**, so no consumer is made to carry a lane. A project's own values — which lanes it
+has, who owns them, which paths and documents they map to — stay in `.dev-standards.json`
+and the agent file exactly as before. A **conventional default** path may be named as a
+default (`docs/specs/` for the normative specs, the way `scripts/lib/config.mjs` defaults
+the work document to `docs/BACKLOG.md`); what a given project's lane actually owns is still
+the project's to state, and the wording must say which of the two it is.
+
 ## Invariants
 
 1. **The vendored payload is declared in `PAYLOAD` in `bin/dev-standards.mjs`**
@@ -60,7 +72,8 @@ fails forever and people learn to ignore a red build.
 - **Grepping for repository names does not prove a file is generic.** After a clean grep the
   scripts still described lanes as `track/app`/`track/infra`, pointed at `CLAUDE.md` by
   filename, and called the reserve "the P2 reserve" — `P2` is a label a project chooses, not
-  a concept. Read the prose, not just the identifiers.
+  a concept. Read the prose, not just the identifiers. (Since v1.15.0 the three lane names
+  are deliberate **in a skill**. In a script they are still exactly this bug.)
 - **The bug a grep would never have found:** `sync-backlog-index.mjs` iterated a hard-coded
   `['infra','app','both']` lane order. A project with different lane names would have
   produced an index that **silently omitted its own issues** — no error, just missing rows.
@@ -131,6 +144,26 @@ repositories. *Rejected:* keeping the reserve gate and marking it non-required p
 useful, just not worth blocking on).
 *Cost accepted:* a stale reserve block can now merge. It is deterministic and regenerating
 it is one command, so the cost is a stale generated paragraph — not a wrong document.
+
+**The lane vocabulary is named, and adopting a lane is a procedure** (v1.15.0, #53). The
+standard described lanes only as an abstraction — "read the ownership map from the agent
+file" — and named none, so every project re-derived the same three from scratch. Two
+consumers reached compatible definitions of a product lane independently, one of them
+through two decision records and the other having to describe its routing test as a
+*departure* from `issue-flow`. A vocabulary nobody names is re-invented per repository,
+which is the opposite of a standard. `issue-flow` now names `infra`/`app`/`product` with
+what each owns and the tie-break when the file test cannot decide, and
+`references/adopting-a-lane.md` carries what must happen when a project introduces one —
+because the observed failure is not the wrong lane, it is a label that routes nothing.
+*Rejected:* keeping lanes abstract (every consumer pays the derivation cost and the
+definitions drift apart — what we had); a lane list in `.dev-standards.json` validated by
+the CLI (invariant 5 wearing a different hat, and it would make lanes mandatory in shape
+even where they are absent in content); a `lanes/` payload of per-lane documents (each would
+have to enumerate the paths its lane owns *in a given project*, which is the project's to
+state — so it would be a shared file every consumer edits, the exact anti-pattern above).
+*Cost accepted:* a project whose split is genuinely something else now reads three names it
+does not use. The skill says the subset is a choice, and where a skill and a project
+disagree the project wins.
 
 **A versioned document never mirrors live tracker state** (v1.5.0). `sync-backlog-index.mjs`
 used to write open/closed-per-lane into the work document. That mirror can only be refreshed

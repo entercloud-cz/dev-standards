@@ -51,9 +51,14 @@ deliberate.** Read a skill for what has not been decided here yet, not to reopen
 
 - Tracker: _TODO `owner/repo`_ — the same value belongs in `.dev-standards.json` →
   `issueFlow.repo`.
-- Lanes and owners: _TODO — fill `issueFlow.owners`, or state here that the project has a
-  single lane and the tracker is its work document (issue-flow allows both)._ A lane is
-  either `"lane": "username"` or `"lane": { "owner": "…", "contributors": ["…"] }`;
+- Lanes and owners: _TODO — fill `issueFlow.owners` and replace this with one row per lane:
+  the lane, its owner, the files it owns, and the test that routes an item to it. Or state
+  that the project has a single lane and the tracker is its work document — `issue-flow`
+  allows both._ The org vocabulary is `infra` · `app` · `product`, and a project takes the
+  subset it needs; `issue-flow` says what each owns, and its
+  `references/adopting-a-lane.md` is the order to introduce one in. **A lane the agent file
+  does not explain is a label a session has to guess at** — this row is what makes it real.
+  A lane is either `"lane": "username"` or `"lane": { "owner": "…", "contributors": ["…"] }`;
   contributors are a note of who works there, never a second assignee.
 - Priorities: `P0`/`P1`/`P2` (override in `issueFlow.labels.priorities` if this project
   names them differently).
