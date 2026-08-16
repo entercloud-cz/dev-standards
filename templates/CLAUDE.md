@@ -3,26 +3,38 @@
 _TODO: one paragraph — what this product is and who uses it. The `app-design` skill
 produces it; until then this placeholder stays._
 
-## Mandatory skills — invoke them, don't improvise
+## Skills
 
 The `.claude/skills/` directory is **vendored** from `entercloud-cz/dev-standards`. Never
 edit those files here — send the change upstream and run
-`npx github:entercloud-cz/dev-standards update`; CI (`standards.yml`) fails on drift.
-Mute a skill this project genuinely cannot use via `skillOverrides` in
-`.claude/settings.json`.
+`npx github:entercloud-cz/dev-standards update`; CI (`dev-standards.yml`) fails on drift.
+
+**Two are the working agreement. Invoke them, don't improvise:**
 
 - `issue-flow` — at the START of any request that will change the repository, and when
   finishing a piece of work.
 - `docs-flow` — before writing into any project document.
-- `app-design` — when designing the application or a module, or writing a decision record.
-- `design-brief` — before the first line of styling, on any redesign request, or when no
-  visual direction is recorded: elicit the brief, let the user choose from rendered
-  variants, record the outcome.
-- `frontend-design` — when creating or reshaping UI, within a chosen and recorded
-  direction (`design-brief`).
-- `webapp-testing` — when a UI change needs a live check as its closing evidence.
-- `azure-deploy` — before touching infrastructure code or a deployment workflow.
-- `db-migration` — before changing a database schema that already holds data.
+
+**The rest are help, offered — not rules.** Reach for one when its subject is what you are
+actually doing, or when asked. None of them is a gate, and none needs a reason to be
+skipped:
+
+- `app-design` — designing an application or module, or writing a decision record.
+- `design-brief` — no visual direction is recorded yet, and someone has to choose one.
+- `frontend-design` — building UI inside a direction that is already chosen.
+- `native-first` — the project builds on a template, framework or module set somebody else
+  ships.
+- `webapp-testing` · `browser-check` — a change wants a live check as its closing evidence.
+- `azure-deploy` — infrastructure code or a deployment workflow.
+- `db-migration` — changing a schema that already holds data.
+- `agent-harness` — configuring Claude Code itself: hooks, `skillOverrides`, settings.
+
+A skill that keeps volunteering where this project has already decided the question can be
+muted — `skillOverrides` in `.claude/settings.json`, and `agent-harness` says which value to
+use. Record WHY next to the mute; a silent mute reads as an accident.
+
+**Where a skill and this project disagree, the project wins and the difference is
+deliberate.** Read a skill for what has not been decided here yet, not to reopen what has.
 
 ## Documentation map — exactly these files (`docs-flow` roles)
 
@@ -40,7 +52,9 @@ Mute a skill this project genuinely cannot use via `skillOverrides` in
 - Tracker: _TODO `owner/repo`_ — the same value belongs in `.dev-standards.json` →
   `issueFlow.repo`.
 - Lanes and owners: _TODO — fill `issueFlow.owners`, or state here that the project has a
-  single lane and the tracker is its work document (issue-flow allows both)._
+  single lane and the tracker is its work document (issue-flow allows both)._ A lane is
+  either `"lane": "username"` or `"lane": { "owner": "…", "contributors": ["…"] }`;
+  contributors are a note of who works there, never a second assignee.
 - Priorities: `P0`/`P1`/`P2` (override in `issueFlow.labels.priorities` if this project
   names them differently).
 
@@ -51,6 +65,9 @@ see `docs-flow` → "Earning a place in the always-in-context file"._
 
 ## Working agreement
 
+- Language: _TODO — the language of the conversation and the language of the artifacts are
+  two separate choices. State both (e.g. "reply in X; code, comments, commits and docs stay
+  in English")._
 - Verify locally before claiming done; close items with evidence (`issue-flow`).
 - _TODO once a build/test loop exists: list the exact commands here (build, test, lint,
   run) — the most valuable lines this file can carry; without them an agent spends steps

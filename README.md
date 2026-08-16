@@ -14,9 +14,16 @@ for the parts of our working agreement that are not specific to any one product:
 | `webapp-testing` skill — drive a real browser (Playwright) to validate a web app; vendored verbatim from [anthropics/skills](https://github.com/anthropics/skills) (Apache 2.0, see its `NOTICE`) | `skills/webapp-testing/` | `.claude/skills/webapp-testing/` |
 | `db-migration` skill — schema-change discipline: guarded idempotent migrations, expand/contract, isolation seams | `skills/db-migration/` | `.claude/skills/db-migration/` |
 | `browser-check` skill — **opt-in** browser verification: fixture server + Playwright page checker, instantiated into a project only on invitation | `skills/browser-check/` | `.claude/skills/browser-check/` |
+| `native-first` skill — build with what a template or framework already ships, and adapt it through its own extension points | `skills/native-first/` | `.claude/skills/native-first/` |
+| `agent-harness` skill — configuring Claude Code itself: quieting a skill, scoping one to files, pre-flight hooks, shared vs local settings | `skills/agent-harness/` | `.claude/skills/agent-harness/` |
 | Issue-flow tooling — manifest-driven issue seeding + the deterministic reserve block, and `--emit` for the live tracker view | `scripts/` | `scripts/` |
 | Reusable drift-check workflow | `.github/workflows/dev-standards-check.yml` | `uses:` from a consumer workflow |
-| Reusable backlog workflow — offline reserve gate + live lane view in the run summary | `.github/workflows/dev-standards-backlog.yml` | `uses:` from a consumer workflow (starter caller written by `init`) |
+| Reusable backlog workflow — reserve-block report + live lane view, both into the run summary; it never fails a run | `.github/workflows/dev-standards-backlog.yml` | `uses:` from a consumer workflow (starter caller written by `init`) |
+
+**Two of these are the working agreement; the rest are help.** `issue-flow` and `docs-flow`
+are invoked as a matter of course. Everything else is reached for when its subject is what
+you are actually doing — none of them is a gate, and skipping one needs no justification.
+The starter agent file `init` writes says this in the form a project can edit.
 
 Issue and PR templates are **not** here — GitHub distributes those itself from
 [`entercloud-cz/.github`](https://github.com/entercloud-cz/.github), so that repo is the only
@@ -62,6 +69,13 @@ recording the source, the version and a hash per file. Then:
    project's priority labels are not the conventional `P0`/`P1`/`P2`. The `track/`,
    `size/`, `area/` and `needs/` label **prefixes** are the org-wide grammar the tooling
    relies on; the names behind them are the project's own.
+
+   A lane is either `"lane": "username"` or `"lane": { "owner": "…", "contributors": […] }`
+   — the short form keeps meaning *owner, no contributors*, and contributors are a record of
+   who works there, never a second assignee. `crossLaneLabel` names the track used for work
+   that genuinely spans lanes (default `both`); rename it only if you are willing to
+   relabel the open items that carry it. `installedAt` is written by the CLI on every
+   install and update, so it dates the copy you have, not the first one.
 2. Add the drift check to CI (below).
 3. Tell the agent file that these files are **vendored**: do not edit them here, send the
    change upstream.
