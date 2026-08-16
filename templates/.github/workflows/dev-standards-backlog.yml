@@ -14,9 +14,18 @@ on:
       - '.dev-standards.json'
   push:
     branches: [main]
-  # Issue events keep the published view fresh without anyone pushing.
+  # Issue events keep the published view fresh without anyone pushing. Only the three that
+  # change WHICH items exist: the seeding tool sets labels and the assignee inside
+  # `gh issue create`, so they are already true at `opened` — and GitHub emits a separate
+  # event for each, which made one filed issue start four to six runs of the same render.
+  # A later relabel is rare and the next push or dispatch picks it up.
+  #
+  # ⚠ Narrowing the trigger of a workflow whose check a ruleset REQUIRES is a trap: the
+  # workflow never runs, so the check never reports, so the pull request blocks for ever.
+  # This one is safe because the backlog check is not required — verify that against the
+  # ruleset rather than assuming it.
   issues:
-    types: [opened, closed, reopened, labeled, unlabeled, assigned, unassigned]
+    types: [opened, closed, reopened]
   workflow_dispatch:
 
 permissions:

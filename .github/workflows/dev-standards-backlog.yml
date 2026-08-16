@@ -5,8 +5,10 @@
 #       uses: entercloud-cz/dev-standards/.github/workflows/dev-standards-backlog.yml@main
 #
 # Two halves, matching what the vendored sync-backlog-index.mjs provides:
-#   * reserve block — deterministic and OFFLINE: fails when the issue manifest changed
-#     and the reserve block in the work document was not regenerated;
+#   * reserve block — deterministic and OFFLINE: says whether the block in the work
+#     document still matches the manifest. It REPORTS, it does not fail: a stale generated
+#     block is worth telling someone about, not worth blocking their pull request over.
+#     Anyone who wants it enforced runs `--check` in a step of their own.
 #   * live view — the lane view rendered into the run summary, never committed (a stored
 #     mirror of live tracker state would be wrong the moment an item closed).
 #
@@ -35,8 +37,21 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ inputs.node-version }}
-      - name: Verify the reserve block matches the manifest
-        run: node scripts/sync-backlog-index.mjs --check
+      - name: Report whether the reserve block matches the manifest
+        run: |
+          if out=$(node scripts/sync-backlog-index.mjs --check 2>&1); then
+            echo "$out" >> "$GITHUB_STEP_SUMMARY"
+          else
+            {
+              echo "### dev-standards — the reserve block is out of date"
+              echo ""
+              echo '```'
+              echo "$out"
+              echo '```'
+              echo ""
+              echo 'Run `node scripts/sync-backlog-index.mjs` and commit the result.'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
 
   publish-live-view:
     name: dev-standards live view
