@@ -3,7 +3,10 @@
  * Seed GitHub labels, milestones and issues from the project's issue manifest.
  *
  * IDEMPOTENT BY DESIGN: it reads what already exists and creates only what is
- * missing (issues are matched on the exact title) — and the manifest is a QUEUE, not a
+ * missing (issues are matched on the exact title). Labels are the one thing it also
+ * RECONCILES — the manifest owns their description and colour, and a drifted description
+ * misroutes work silently. Milestones and issues are never edited: their text is the
+ * tracker's the moment it exists. And the manifest is a QUEUE, not a
  * registry: once the tracker owns an item, its entry is removed from the manifest in
  * the same run. What remains in the file is only what the repository still owns — the
  * reserve, and anything not yet seeded. An entry kept after creation would only go
@@ -124,14 +127,42 @@ for (const i of issues) {
 
 console.log(`Repo: ${REPO}${DRY ? '  (DRY RUN — nothing will be created)' : ''}`);
 
-// 1) Labels
-const existingLabels = new Set(gh(['label', 'list', '-R', REPO, '--limit', '200', '--json', 'name'], { json: true }).map((l) => l.name));
-let createdLabels = 0;
+// 1) Labels — create what is missing AND reconcile what drifted. A label's description is
+// where a lane states its routing test, so a description edited in the manifest and never
+// pushed leaves the tracker teaching the old rule; nothing else reports that, because the
+// label exists and a create-only seeder skips it for ever. (Seen for real: a project split
+// one lane into two, and `track/app` went on reading "The single lane of this project".)
+//
+// Labels the manifest does not declare are left alone — this file is the set the project
+// states, not an inventory of every label a tracker carries.
+const normaliseColour = (c) => String(c).replace(/^#/, '').toLowerCase();
+const existingLabels = new Map(
+  gh(['label', 'list', '-R', REPO, '--limit', '200', '--json', 'name,color,description'], { json: true })
+    .map((l) => [l.name, l])
+);
+// Both paths send only the fields the entry declares. `undefined` reaching execFileSync is
+// stringified, so the old unconditional form created a label whose description was the
+// literal word "undefined" — which then matched nothing and was never reconciled either.
+const labelFields = (l) => [
+  ...(l.color !== undefined ? ['--color', l.color] : []),
+  ...(l.description !== undefined ? ['--description', l.description] : []),
+];
+let createdLabels = 0, updatedLabels = 0;
 for (const l of manifestLabels) {
-  if (existingLabels.has(l.name)) continue;
-  step('create label', l.name);
-  if (!DRY) gh(['label', 'create', l.name, '-R', REPO, '--color', l.color, '--description', l.description]);
-  createdLabels++;
+  const current = existingLabels.get(l.name);
+  if (!current) {
+    step('create label', l.name);
+    if (!DRY) gh(['label', 'create', l.name, '-R', REPO, ...labelFields(l)]);
+    createdLabels++;
+    continue;
+  }
+  const drift = [];
+  if (l.description !== undefined && (current.description || '') !== l.description) drift.push('description');
+  if (l.color !== undefined && normaliseColour(current.color) !== normaliseColour(l.color)) drift.push('colour');
+  if (!drift.length) continue;
+  step('update label', `${l.name} — ${drift.join(' + ')} differs from the manifest`);
+  if (!DRY) gh(['label', 'edit', l.name, '-R', REPO, ...labelFields(l)]);
+  updatedLabels++;
 }
 
 // 2) Milestones — gh has no `milestone` command; use the REST API.
@@ -237,7 +268,8 @@ if (removedEntries) {
   }
 }
 
-console.log(`\nLabels created: ${createdLabels} (${manifestLabels.length - createdLabels} already present)`);
+console.log(`\nLabels created: ${createdLabels}, updated: ${updatedLabels}`
+  + ` (${manifestLabels.length - createdLabels - updatedLabels} already match the manifest)`);
 console.log(`Milestones created: ${createdMilestones} (${manifestMilestones.length - createdMilestones} already present)`);
 console.log(`Issues created: ${createdIssues}, already present: ${skipped}, total in manifest: ${issues.length}`);
 if (DRY) console.log('\nDry run — nothing was created. Re-run without --dry-run to apply.');
