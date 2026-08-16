@@ -51,6 +51,15 @@ function step(action, what) {
 // Fixed skeleton so every lane reads the same shape: why it matters, what "done"
 // means, and which files it will touch (with the owning lane, because that is what
 // decides who may edit them).
+// The lane a cross-lane item STARTS in: the one it says it needs first, or the project's
+// default. The branch name and the assignee must agree on it, so both derive it here. They
+// did not: the branch hint used to join every configured owner, which reads as `a|b/slug`
+// and, the moment a project has a third lane, names a lane the item does not touch.
+const firstLaneOf = (i) =>
+  (i.track === CFG.crossLaneLabel ? (i.needs || CFG.defaultFirstLane) : i.track);
+
+const branchFor = (i) => `${firstLaneOf(i) || i.track}/${i.slug}`;
+
 function renderBody(i) {
   const done = (i.done && i.done.length ? i.done : ['_TODO: write verifiable acceptance criteria (promoted from the reserve)._'])
     .map((d) => (d.startsWith('_') ? d : `- [ ] ${d}`)).join('\n');
@@ -65,7 +74,7 @@ ${done}
 
 **Likely files:** ${i.files || '_TODO — see the source section._'}
 
-<sub>Seeded from \`${CFG.manifest}\` (slug: \`${i.slug}\`). Branch: \`${i.track === 'both' ? Object.keys(CFG.owners).join('|') || 'lane' : i.track}/${i.slug}\`. The reasoning behind this item lives in ${i.source.split(' ')[0]}.</sub>`;
+<sub>Seeded from \`${CFG.manifest}\` (slug: \`${i.slug}\`). Branch: \`${branchFor(i)}\`. The reasoning behind this item lives in ${i.source.split(' ')[0]}.</sub>`;
 }
 
 // A reserve entry has no priority (issue-flow: it gets one when promoted), so filter
@@ -85,7 +94,7 @@ const labelsFor = (i) => [
 const OWNERS = CFG.owners;
 const assigneeFor = (i) => {
   if (i.assignee) return i.assignee;
-  const lane = i.track === 'both' ? (i.needs || CFG.defaultFirstLane) : i.track;
+  const lane = firstLaneOf(i);
   return (lane && OWNERS[lane]) || null;
 };
 
@@ -192,8 +201,10 @@ for (const i of issues) {
     createdTitles.add(i.title);
     console.log(`   → ${url}${owner ? `  (@${owner})` : ''}`);
   } else {
+    // The branch hint is printed here because renderBody() is never called in a dry run —
+    // without this line the only way to see the branch an item would carry is to create it.
     console.log(`   labels: ${labels.join(', ')}${i.milestone ? ` · milestone: ${i.milestone}` : ''}`
-      + `${assigneeFor(i) ? ` · @${assigneeFor(i)}` : ''}`);
+      + `${assigneeFor(i) ? ` · @${assigneeFor(i)}` : ''} · branch: ${branchFor(i)}`);
   }
   createdIssues++;
 }

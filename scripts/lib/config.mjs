@@ -19,16 +19,47 @@ export function loadConfig(root = process.cwd()) {
   return JSON.parse(readFileSync(path, 'utf8'));
 }
 
+/**
+ * A lane is configured either as a bare username or as an object naming an owner and the
+ * people who also work there. Both forms are read here and NOWHERE else: what leaves this
+ * function is always `owners[lane] = username | null` and `contributors[lane] = [...]`, so
+ * no caller ever handles two shapes. The bare string is the original form and keeps meaning
+ * "owner, no contributors" for ever — an `update` preserves a project's issueFlow block, so
+ * configs written before contributors existed stay in the wild indefinitely.
+ *
+ * A lane with contributors but no owner is legitimate: it registers the lane and files its
+ * issues unassigned. Key order is preserved, because it is the lane order of the index.
+ */
+function normaliseOwners(raw) {
+  const owners = {}, contributors = {};
+  for (const [lane, value] of Object.entries(raw || {})) {
+    const isObject = value && typeof value === 'object' && !Array.isArray(value);
+    owners[lane] = (isObject ? value.owner : value) || null;
+    contributors[lane] = isObject && Array.isArray(value.contributors) ? value.contributors : [];
+  }
+  return { owners, contributors };
+}
+
 /** The `issueFlow` section, validated. Env vars win so CI can override without a commit. */
 export function issueFlowConfig(root = process.cwd()) {
   const cfg = loadConfig(root).issueFlow || {};
+  const { owners, contributors } = normaliseOwners(cfg.owners);
   const out = {
     repo: process.env.DEV_STANDARDS_REPO || cfg.repo,
     manifest: cfg.manifest || 'docs/issues-seed.json',
     workDocument: cfg.workDocument || 'docs/BACKLOG.md',
-    // lane → GitHub username. Used to assign an issue at creation; a lane with no owner
-    // simply creates the issue unassigned rather than failing.
-    owners: cfg.owners || {},
+    // lane → GitHub username (or null). Used to assign an issue at creation; a lane with no
+    // owner simply creates the issue unassigned rather than failing.
+    owners,
+    // lane → the people who also work there. Nothing here reads this to decide anything:
+    // assignment stays single, because "what am I working on" has to have one answer.
+    // It is the canonical note of who works a lane, and what a CODEOWNERS file is kept
+    // in step with by hand.
+    contributors,
+    // The track name meaning "this item spans lanes". Configurable because a project that
+    // has three lanes cannot call the cross-lane one `both` and still be understood; the
+    // default keeps every existing project unchanged.
+    crossLaneLabel: cfg.crossLaneLabel || 'both',
     // For cross-lane items: which lane goes first when the item does not say.
     defaultFirstLane: cfg.defaultFirstLane || null,
     // Label vocabulary the scripts must recognise. `priorities` is ordered most-urgent
