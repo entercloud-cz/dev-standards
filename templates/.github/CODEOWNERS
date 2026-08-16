@@ -9,7 +9,10 @@
 # signal is who actually gets asked — so after adding an owner, open a pull request that
 # touches their paths and check that they were requested.
 #
-# Example shape (replace with this project's lanes):
-# *            @org/team-or-user
-# /infra/      @infra-owner
-# /docs/       @org/team-or-user
+# Example shape — the org lane vocabulary is infra · app · product and a project takes the
+# subset it needs (`issue-flow`, and references/adopting-a-lane.md for the order to do it
+# in). Replace the paths with the ones each lane actually owns; a lane given a whole tree
+# because it mostly belongs there generates review requests that carry no decision for it.
+# *             @org/team-or-user
+# /infra/       @infra-owner
+# /docs/specs/  @product-owner
