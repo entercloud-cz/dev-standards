@@ -77,6 +77,11 @@ fails forever and people learn to ignore a red build.
   `paths` globs in the frontmatter (surface it only for relevant files — `docs-flow` uses
   this) and `skillOverrides` in a consumer's `.claude/settings.json`
   (`"on"` · `"name-only"` · `"user-invocable-only"` · `"off"`).
+- **The payload is the filesystem, not git.** `walk()` in the CLI lists what is on disk, so
+  anything that appears under a payload directory ships to every consumer and is hash-checked
+  there for ever — including files git ignores. A `__pycache__` produced by *running the
+  verification steps* made it into the payload during v1.14.0 and was caught only by diffing
+  `list` against the previous tag. Diff it every time; `.gitignore` will not save you.
 - **Skills are discovered live** from an existing `.claude/skills/` directory, but creating
   that directory for the first time needs a session restart. Worth saying to a consumer who
   reports "the skill isn't there".
@@ -114,6 +119,19 @@ starter — `init` writes it into every new project, and a deleted starter resur
 the next `init` run; editing the vendored `webapp-testing` — foreign, verbatim, its
 NOTICE forbids it.
 
+**Two skills are the working agreement; the rest are help** (v1.14.0). The starter agent
+file used to call eight skills mandatory, and the backlog workflow failed a pull request
+because a generated block had not been regenerated. Both are the same mistake: a standard
+that is enforced everywhere stops being read anywhere. Now `issue-flow` and `docs-flow` are
+invoked as a matter of course, everything else is reached for when its subject is at hand,
+and the only check that may fail a consumer's run is the drift check — which catches a
+locally edited vendored file, i.e. a change that would silently never reach the other
+repositories. *Rejected:* keeping the reserve gate and marking it non-required per project
+(the same trap one setting away); dropping the reserve report altogether (it is genuinely
+useful, just not worth blocking on).
+*Cost accepted:* a stale reserve block can now merge. It is deterministic and regenerating
+it is one command, so the cost is a stale generated paragraph — not a wrong document.
+
 **A versioned document never mirrors live tracker state** (v1.5.0). `sync-backlog-index.mjs`
 used to write open/closed-per-lane into the work document. That mirror can only be refreshed
 *after* an item closes — i.e. after the change that closed it merged — so every finished
@@ -139,7 +157,18 @@ accepting staleness (a mirror exists to be trusted, or not at all).
   node --check bin/dev-standards.mjs scripts/*.mjs scripts/lib/*.mjs
   node bin/dev-standards.mjs list                 # payload is what you expect
   (cd "$(mktemp -d)" && node <repo>/bin/dev-standards.mjs install)   # install into a scratch dir
-  python3 -c "import yaml;yaml.safe_load(open('.github/workflows/dev-standards-check.yml'))"
+  # EVERY workflow, here and in templates/ — a starter is as easy to break as a real one
+  for f in .github/workflows/*.yml templates/.github/workflows/*.yml; do
+    python3 -c "import yaml,sys;yaml.safe_load(open(sys.argv[1]))" "$f"; done
+  # every SKILL.md frontmatter parses, name matches its directory, description is non-empty
+  # — a malformed block does not error, the skill simply is not there
+  # reference files ship to every consumer and nothing else checks them. Parse, never
+  # py_compile: py_compile writes __pycache__ INTO the payload directory, and the next
+  # `list` cheerfully vendors a .pyc to every consumer (this happened while writing v1.14.0).
+  node --check skills/*/references/*.mjs
+  python3 -c "import ast,sys;[ast.parse(open(f).read()) for f in sys.argv[1:]]" skills/*/references/*.py
+  # last: the payload is exactly what you intended — diff it against the previous tag
+  node bin/dev-standards.mjs list
   ```
   Then, in a real consumer: `update`, run its tooling, and `check` — a change that breaks a
   consumer's scripts cannot be seen from inside this repo.
