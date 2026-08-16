@@ -135,6 +135,7 @@ function vendor(cmd) {
       + 'The issueFlow block below IS yours to edit.',
     source: SOURCE,
     version: VERSION,
+    // Rewritten on every install and update — it dates THIS copy, not the first one.
     installedAt: new Date().toISOString().slice(0, 10),
     vendored,
     // Preserved across updates — this is the project's own configuration.
