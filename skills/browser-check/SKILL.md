@@ -58,10 +58,15 @@ adapting.
 - **A green run says "the page works" — never "it shows correct data."** Correct data
   is a different layer's job (checks against a real environment). State this in the
   harness header so nobody upgrades green to a claim it cannot make.
-- **The check must be able to fail, and you prove it before trusting it.** Introducing
-  the harness includes breaking something on purpose — a thrown error in a page, an
-  inverted role gate — and showing the run go red. A check whose failure mode was never
-  demonstrated is a green light wired to nothing.
+- **Prove this harness can fail before trusting it** — break something on purpose while
+  introducing it (a thrown error in a page, an inverted role gate) and show the run go red.
+  This is the general rule about guards, applied here; `docs-flow` states it and the rest
+  of what keeps a check honest.
+- **One list of exceptions, derived — never restated.** Where a page is skipped by this
+  harness and also excluded from a conformance test, derive one list from the other. Two
+  hand-maintained copies drift, and the drift is invisible: a skip list that fell behind
+  let the checker follow redirects and measure the same page three times under different
+  names, all green.
 - **Three layers, none replaces another.** Static analysis (text: contracts declared —
   the conformance test from `app-design`'s contract triangle is this layer) → browser
   check (the page survives loading and reacts) → real-data verification (the numbers
@@ -84,3 +89,9 @@ role earns its own function (the reference shows the pattern): run it once per r
 assert **both directions** — the privileged role sees the content and no gate, the
 unprivileged role sees the gate and no content. A blank page for the unprivileged role
 is a failure too: an explanation belongs where content was denied.
+
+**Give refusal its own roles.** Add a caller with no identity at all and one with an
+identity that is not permitted, and keep them distinct — unauthenticated and forbidden are
+different answers, and the chrome branches that handle them are otherwise reachable by no
+check at all. A refusal check must assert the **specific** refusal: a test that accepts any
+failure cannot tell "the gate works" from "the server is down".

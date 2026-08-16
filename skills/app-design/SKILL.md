@@ -40,6 +40,14 @@ different thing.
    · async/background work backbone · build-vs-buy for identity. Not deciding is also a
    decision — record it with its trigger.
 
+   Forks that arrive later but arrive in every project, so they are worth expecting: what
+   the **deployable unit** is and whether a version is minted by a merge or by its content ·
+   which **environments** exist, what may land on each, and what evidence gates the last one
+   · who owns a **shared resource** each pipeline touches only part of · which way each
+   guard **fails** — closed for anything touching data or authorization, open for advisory
+   tooling — decided per case rather than by habit · and the deliberate **accepted risk**,
+   whose record binds the project to keep saying the guarantee is not yet met.
+
 3. **The document set.** Instantiate the `docs-flow` roles for the project: product
    explanation and system explanation (skeletons below), planned work, how-to/operations,
    and the agent file carrying the role→file map. The set is closed (`docs-flow` — do not
@@ -88,6 +96,20 @@ The observable trigger that reopens this. Omit only if there is none.
 
 - **A record is never edited into a lie.** Reversing a decision means a new record and
   marking the old one `Superseded by NNNN`. Numbers are permanent; gaps are fine.
+- **Most records do not die whole.** A status of Accepted-or-superseded has no word for a
+  record that is eighty per cent alive, which is the common case — so say which part died:
+  `Accepted · the unconditional half superseded by NNNN`. Mark it, don't rewrite it: the
+  reasoning was sound on its premise, and the premise is what changed. The same applies to a
+  single consequence that stopped being needed — annotate that line with the date and why.
+- **Before there is an implementation, amending in place is honest**; after, it is not. A
+  record with nothing built against it yet can absorb a change as a dated amendment note in
+  its status, listing what changed and who decided. Once code depends on it, the only honest
+  move is a new record.
+- **Relationships other than supersession are worth naming** — `Amends`, `Refines`, and a
+  link to the work item — as metadata lines, so a reader lands on the whole thread.
+- **A trigger that fires does not always reverse the decision.** Record that too:
+  "trigger fired, decision confirmed by NNNN" is a decision doing its job, and it stops the
+  question being reopened a third time.
 - **Keep the trigger observable.** "The same fix is needed in 3+ pages" reopens a
   decision; "when it feels slow" reopens nothing and forbids nothing.
 - The system explanation links decisions in an **index-only table** (decision → link) so

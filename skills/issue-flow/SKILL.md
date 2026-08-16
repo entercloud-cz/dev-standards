@@ -37,8 +37,19 @@ change costs a conflict.
 1. Your queue is **items assigned to you**, not a label filter — a lane label shows the
    other person's work too.
 2. Read the item for its context and acceptance criteria before touching anything.
-3. **One branch per item, one item per branch**, named from the item so the two cannot
-   drift apart.
+3. **One branch per item, one item per branch, one session per item** — the branch named
+   from the item so they cannot drift apart. Resume a session to continue its item; start a
+   clean one when the item changes.
+
+**Session history is not a record.** A decision, a measurement or a rejected option exists
+only once it is written into a project document or the tracker item — put it there before
+the item ends. On resuming, re-derive state rather than trusting a figure quoted earlier in
+the conversation; it was true when it was measured, which is not the same as now.
+
+That last part is the agent's job, not the human's: the person choosing which session to
+open cannot see themselves sliding into a second item, and only the session can. **When a
+request is a different item from the one this session has been working, say so and offer a
+clean one.**
 
 ## Filing an item
 
@@ -78,6 +89,18 @@ owns the **files it will touch** — the ownership map is in the agent file. An 
 genuinely spans lanes says which half must land first, and is assigned to whoever does that
 half.
 
+**Past two lanes, prefer "blocked on" over "cross-lane".** A cross-lane label is readable
+while there are two lanes and stops being readable the moment there is a third. Most items
+that feel cross-lane are really one lane's work waiting on another: mark them as belonging
+to the lane that does the work, with a marker naming the lane they wait for. Keep the
+cross-lane label for work that genuinely happens in two places at once.
+
+**A code owner without write access is not a code owner.** GitHub does not request review
+from someone who lacks write access to the repository, and does not warn — the file
+validates, and the request quietly goes to somebody else. The only signal is who actually
+gets asked, so after adding an owner, open a change touching their paths and confirm they
+were requested.
+
 ## Finishing work
 
 Do all three, in this order. Skipping the last two is how documents start lying.
@@ -89,6 +112,14 @@ Do all three, in this order. Skipping the last two is how documents start lying.
 2. **Update the document the change belongs to** — see the `docs-flow` skill for which one.
 3. **Reflect the new state in the work document** — marked done with its reason, not just a
    tick.
+
+*Optional, and only where the project publishes releases:* if the change has a consequence
+a pull-request title cannot carry — a behaviour someone must know about, a manual step, a
+limit that moved — leave a **release-note fragment**: one small file per change, named from
+the item, saying in a sentence what is now possible or fixed. One shared changelog file
+conflicts on every second change when more than one person is working; separate files never
+do, and the publisher collects the ones added since the last tag. Skip it when the title
+already says everything.
 
 **Do not mirror live tracker state into a versioned document.** Which items are open is
 already true somewhere else; a copy in the repository can only be refreshed *after* the item
@@ -128,6 +159,11 @@ Something new that is only low-priority goes into the reserve, not into a docume
 - **File before you work, not after.** An item written once the change is done is a
   changelog entry, not coordination — the other lane needed it while you were typing.
 - **Never close an item you did not verify.** "The code looks right" is not evidence.
+- **Say what you verified, not what you inferred.** These are different sentences: "the
+  permission and the syntax are correct" is not "it works". If a criterion will only be
+  proved by the next real run, say that instead of implying the merge proved it — and when
+  a criterion was **not** met, record the miss rather than quietly restating the target as
+  whatever was achieved.
 - **Never close an item partially.** If half shipped, comment what remains and leave it
   open, or split it and link both ways.
 - **Stay in your lane's files.** Needing a file another lane owns means the item spans

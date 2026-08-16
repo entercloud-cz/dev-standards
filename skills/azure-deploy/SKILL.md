@@ -75,6 +75,14 @@ foundation so tags do not churn between the two passes.
 parameters, off by default where they cost money, with the enabling trigger documented in
 the parameter description — the same trigger discipline decision records use.
 
+**Incremental deployment never deletes.** A converge-only mode applies what the template
+declares and leaves everything else running, so removing a resource from the template does
+not remove it from the stamp — and *renaming* one creates the new while the old keeps
+running. Two consequences worth writing down: a retired resource is **pruned deliberately**,
+not merely undeclared (an abandoned one keeps costing money; a renamed worker means two
+workers on one queue). And a prune step must be idempotent and **refuse on an unreadable
+read** rather than treating "I could not tell" as "already gone".
+
 ## Two pipelines, two owners
 
 Infrastructure and application deploy through **separate workflows with disjoint
@@ -109,7 +117,21 @@ any deploy that would otherwise replace the resource by renaming it.
 - **Authenticate with OIDC federated credentials by default** — `id-token: write`, no
   long-lived client secret in the repository. A service-principal secret is the
   fallback for constraints that rule OIDC out, and it is recorded as debt with a
-  tracked item, not as the design.
+  tracked item, not as the design. Once an identity has no secret, never give it one back.
+  A new environment's federated **subject is read from the run, never constructed**: the
+  subject format has changed over time and the API can report the old form while the
+  platform issues the new one. Dispatch in preview mode, let the login fail, copy the
+  subject it printed. One credential per environment — a wildcard subject is not a
+  shortcut, it is a highly privileged identity handed to every environment at once.
+- **Pin live values before redeploying.** Read what is currently deployed — the image, the
+  generated name, the endpoint — and pass it in, or a redeploy resets a running resource to
+  the template's placeholder. A live value outranks a configured variable, which outranks a
+  derived default.
+- **Read `what-if` literally.** It normalises some values, so a stamp exactly in sync can
+  report a modification permanently; and it does not evaluate nested deployments, so much of
+  a layered template shows as "ignore". Record which lines are permanent noise in the
+  workflow header, and **never build a decision on "the diff was empty"** — that reads the
+  same whether nothing changed or nothing was evaluated.
 - **The workflow header documents its own configuration**: every required and optional
   Variable and Secret, what each gates, and where it is set. The header is the one
   authoritative list — the how-to document points at it instead of repeating it
@@ -119,6 +141,40 @@ any deploy that would otherwise replace the resource by renaming it.
 - **Log the effective state**: echo the resolved non-secret parameters before deploying,
   mask everything secret as soon as it is assembled, and write deployment outputs to the
   step summary so the run is auditable without re-running it.
+- **A parent must never wait in its own child's concurrency group.** When one workflow
+  calls another, a callee asking for the group its caller already holds queues behind the
+  run that is waiting for it. The result is a deploy that never finishes and never errors —
+  so scope the lock per environment when dispatched directly, and per run when called.
+- **Read the live state before dispatching.** Two people deploy the same environments; your
+  checkout does not know what is on one. What is already there is a fact to fetch, not to
+  infer from the branch you happen to be on.
+- **An escape hatch is recorded, not absent.** A rule with no way around it gets bypassed by
+  hand the first time it is inconvenient, and then it is not a rule. Give the bypass a
+  named input, and make it print who used it and why into the run summary.
+
+### Required checks — require few, and make those reachable
+
+Branch protection is where teams accidentally build the pedantry they later resent. Two
+mechanics decide everything, and they are easy to get backwards:
+
+- **Only a check that reports on every pull request may be required.** A job skipped by an
+  `if:` condition reports **success** and satisfies the requirement. A whole workflow
+  skipped by a `paths:` or branch filter reports **nothing**, so the check stays pending and
+  the pull request is blocked with "Waiting for status to be reported" — for ever. Skip at
+  job level; never gate a required workflow with a path filter. (GitHub documents both
+  behaviours under *Troubleshooting required status checks*, read 2026-08-16.)
+- **A matrix job is a poor required check.** Its contexts are named per cell, so the name a
+  ruleset must require is one of the expanded names — and a matrix job that is skipped does
+  not expand, so those names never appear. Put a small non-matrix job after the matrix and
+  require that instead. (Observed in a consumer on two pull requests the same day, not
+  something GitHub documents.)
+
+The same trap catches trigger narrowing: reducing the events a workflow listens to is a good
+way to stop wasting runs, and a good way to make a required check unreachable. Check what
+the ruleset actually requires before narrowing anything.
+
+Every gate also needs `workflow_dispatch`. A check only a webhook can start is unreachable
+exactly when webhooks are throttled, which is when people merge anyway.
 
 ## Secrets — two opposite flows, both fail-closed
 

@@ -97,6 +97,29 @@ differs because the failure modes do:
   has not yet run anywhere it cannot re-run takes the new number — timestamp prefixes do
   not collide, which is a reason to prefer them.
 
+### Two ways a change reaches nobody, silently
+
+Both come from the same seam: a fresh database is usually built from a **schema file** and
+then stamped as up to date, *without* the migrations ever running.
+
+- **Reference data written by a migration must land in the schema file in the same
+  change.** Rows that exist only in a migration never reach a database created after it —
+  the bootstrap applies the schema, marks the ledger current, and the migration never runs.
+  The symptom is not an error: the new environment simply comes up with an empty catalogue
+  and does nothing. The mirror rule keeps the duplication bounded — **backfills of existing
+  rows belong only in the migration**, because an empty database has nothing to backfill.
+- **Editing a re-applied file requires a migration in the same change.** Policies, seeds,
+  views and the schema file itself are typically re-applied wholesale rather than tracked —
+  so editing one moves no ledger row, and a runner that plans from the ledger correctly
+  concludes there is nothing to do. The edit is then applied nowhere, for ever. Ship a
+  migration alongside it, even a trivial one, so the change has a row to move.
+
+And when the ledger cannot answer a question, **refuse — never default**. A missing flag or
+an unreadable row means "unknown", and reading unknown as "nothing to worry about" waves
+through exactly the case the check exists for. An empty ledger is its own trap: on an
+existing database it reads as "version zero", i.e. hopelessly behind, so a bootstrap must
+seed it rather than leave it blank.
+
 ## Guarded and re-runnable
 
 The runner can crash after statement three of five and will be run again — so

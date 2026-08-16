@@ -32,8 +32,17 @@ A healthy set is small and closed. Most projects need these, and only these:
 | **Agent rules** (always in context) | Conventions, invariants, gotchas — what causes an incident when forgotten | anything lookup-able in the roles above |
 
 A project may also have **read-only** documents it does not own — an external review
-trail, an audit report, a vendor's output. Read them; never edit them. The project's map
-says which those are.
+trail, an audit report, a vendor's template and its documentation. Read them; never edit
+them. The project's map says which those are and where they live.
+
+**Optional — a normative half of the product explanation.** A product description
+reverse-engineered from code cannot constrain that code: a handler computing the wrong
+thing *agrees* with a document derived from it, so there is nothing an implementation can be
+wrong against. Where a project needs that, the product-explanation role may take a second
+half — one entry per feature, numbered and superseded like a decision record, saying what
+the product **must** do. The two halves never state the same behaviour, and the descriptive
+side becomes a pointer as each feature ships. Reach for this when something must be
+checkable against intent; it is not a default.
 
 ## When you change something, update exactly one place
 
@@ -84,6 +93,43 @@ still carries the reason:
 When adding an invariant, check whether an existing line says the same thing less
 precisely, and **replace** it instead of stacking both.
 
+**When it grows, move detail out rather than trimming words.** A second agent file inside
+the directory it governs carries the rules for that directory; the root file keeps a
+one-line tripwire at the point of danger, pointing there. Nothing is stated in both, and
+the tripwire is a warning, not the rule — open the scoped file before editing what it
+governs. What bounds the root file is that pattern, not a word count.
+
+Read it end to end occasionally. It is the document nobody re-reads, which is exactly where
+a renamed workflow, a retired component or a deleted module survives long after the fact.
+
+## When a convention needs a machine behind it
+
+Most documentation rot is caught by a reader. Some of it never is: an index listing nine of
+ten records, an ownership file naming a path that was deleted, a link resolving to nothing.
+**Nothing fails, so nobody learns** — and the one place you would trust to enumerate
+something quietly under-reports. That, and only that, is the case for putting a test behind
+a document or a convention.
+
+Keep it narrow, and keep it honest:
+
+- Add one only where a machine can compare against **something external and true** — files
+  on disk against the index claiming to list them, paths in an ownership file against paths
+  that exist — or against a rot you have **actually seen**. "It would be tidier" is not a
+  reason; an apparatus defending a boundary you invented is worse than the drift.
+- **Write what it deliberately does not enforce**, and why. A machine can know that somebody
+  decided; it cannot know they decided correctly. Saying so stops the next reader trusting
+  it for more than it does.
+- **Guard against passing vacuously.** A glob that matches nothing passes. A parser
+  returning an empty list after a format change passes. Assert the set you are checking is
+  non-empty — a check that silently examines nothing is worse than no check.
+- **A guard that has never failed guards nothing.** Prove it can fail before trusting it:
+  break the thing on purpose, once, and watch it go red.
+- **A test double must refuse what the real thing refuses.** A permissive fake hides exactly
+  the bug the test exists to catch.
+- **Denial must be specific.** A check that treats any error as a pass cannot tell "the rule
+  works" from "nothing works" — assert the exact refusal, and start from a positive control
+  that proves the setup is sound.
+
 ## Definition of done for a documentation change
 
 1. The fact is in **one** document — the one whose role it is.
@@ -103,3 +149,10 @@ about the system), the product explanation (a fact about behaviour), or a skill 
 procedure). A new top-level document needs the user's explicit agreement — and the map in
 the agent file must be updated in the same change, or the next reader will not know the
 document exists.
+
+**An artifact is not a document.** A release note, a generated report, a review trail: these
+are consumed once, by a particular audience, at a particular moment — they do not answer
+"how does this work" or "why is it this way", and nobody re-reads them to find out. The
+closed set above is about document roles, so a directory of artifacts alongside it is not a
+breach of it. Keep the distinction visible in the map, and do not let an artifact start
+carrying facts that a role owns.
