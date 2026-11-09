@@ -218,12 +218,13 @@ for (const m of manifestMilestones) {
 // 3) Issues. Identity is exact-title based, so the comparison set must be complete —
 // at the cap, older issues fall out of it and re-seeding would duplicate them. Refuse
 // rather than guess.
-const existingList = gh(['issue', 'list', '-R', REPO, '--state', 'all', '--limit', '1000', '--json', 'number,title'], { json: true });
+const existingList = gh(['issue', 'list', '-R', REPO, '--state', 'all', '--limit', '1000', '--json', 'number,title,state'], { json: true });
 if (existingList.length >= 1000) {
   console.error('Tracker has 1000+ issues — the exact-title identity check is no longer reliable. Refusing to seed.');
   process.exit(1);
 }
 const existingIssues = new Map(existingList.map((i) => [i.title, i.number]));
+const closedIssues = new Set(existingList.filter((i) => String(i.state).toUpperCase() === 'CLOSED').map((i) => i.number));
 
 // A title match alone is NOT identity: an unrelated issue can share a title. What
 // proves a tracker item is THIS entry is the seeded marker in its body. A title match
@@ -279,16 +280,21 @@ for (const i of issues) {
 // Removal must be as strict as creation: only entries the tracker VERIFIABLY owns
 // (created this run, or title + seeded marker) leave the manifest. A same-titled
 // foreign issue keeps the entry — it was never filed.
-const keep = (list) => list.filter((e) => {
+// ⚠ A RESERVE ENTRY WHOSE ISSUE IS CLOSED IS A DEMOTION, NOT A DUPLICATE. Demoting an item
+// means closing its issue and writing it back into the reserve — the closed issue keeps its title
+// and seeded marker. Only an OPEN issue owns a reserve entry; otherwise every later run, however
+// narrow its --only, deletes the entry the maintainer just put back.
+const keep = (list, { reserve = false } = {}) => list.filter((e) => {
   if (createdTitles.has(e.title) || ownedTitles.has(e.title)) return false;
   const n = existingIssues.get(e.title);
   if (n === undefined) return true;
+  if (reserve && closedIssues.has(n)) return true;
   if (ownsEntry(e, n)) return false;
   console.error(`Note: '${e.slug}' shares a title with unrelated issue #${n} — kept in the manifest.`);
   return true;
 });
 const nextIssues = keep(manifest.issues || []);
-const nextReserve = keep(reserve);
+const nextReserve = keep(reserve, { reserve: true });
 const removedEntries = ((manifest.issues || []).length - nextIssues.length) + (reserve.length - nextReserve.length);
 if (removedEntries) {
   const noun = `entr${removedEntries === 1 ? 'y' : 'ies'}`;
